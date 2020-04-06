@@ -1,20 +1,41 @@
 {
-  "name": "anitrak-d5",
+  "name": "anitrak-desktop",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/core": "^4.9.7",
+    "@material-ui/icons": "^4.9.1",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "chart.js": "^2.9.3",
+    "cross-env": "^7.0.2",
+    "electron-is-dev": "^1.1.0",
+    "level-js": "^5.0.1",
+    "linvodb3": "^3.26.0",
+    "material-ui-confirm": "^2.0.4",
+    "notistack": "^0.9.9",
     "react": "^16.13.1",
+    "react-chartjs-2": "^2.9.0",
+    "react-content-loader": "^5.0.2",
     "react-dom": "^16.13.1",
+    "react-image": "^2.4.0",
+    "react-infinite-scroller": "^1.2.4",
+    "react-multi-carousel": "^2.5.3",
+    "react-router": "^5.1.2",
+    "react-router-dom": "^5.1.2",
     "react-scripts": "3.4.1"
   },
+  "homepage": ".",
+  "main": "public/electron.js",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "postinstall": "electron-builder install-app-deps",
+    "electron-dev": "concurrently \"cross-env BROWSER=none yarn start\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron-build": "yarn build && yarn electron-builder"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -30,5 +51,38 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "concurrently": "^5.1.0",
+    "electron": "^8.2.0",
+    "electron-builder": "^22.4.1",
+    "typescript": "^3.8.3",
+    "wait-on": "^4.0.1"
+  },
+  "author": {
+    "name": "Abhishek Ketkar"
+  },
+  "build": {
+    "appId": "com.akai.anitrak",
+    "productName": "AniTrak",
+    "copyright": "Copyright © 2020 ${author}",
+    "files": [
+      "build/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "msi"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

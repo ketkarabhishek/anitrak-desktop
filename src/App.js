@@ -1,26 +1,56 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import {createMuiTheme } from '@material-ui/core/styles';
+import { ThemeProvider } from '@material-ui/styles';
 
-function App() {
+import {red} from '@material-ui/core/colors';
+
+import { SnackbarProvider } from 'notistack';
+import SideNav from './components/SideNav';
+import { ConfirmProvider } from 'material-ui-confirm';
+
+export default function App(props){
+
+  const theme = createMuiTheme({
+    palette: {
+      primary: red,
+      secondary: {
+        main: '#f44336',
+      },
+      type: 'dark', // Switching the dark mode on is a single property value change.
+    },
+  });
+
+  // add action to all snackbars
+  const notistackRef = React.createRef();
+  // const onClickDismiss = key => () => { 
+  //     notistackRef.current.closeSnackbar(key);
+  // }
+
+  // function dismiss(key){
+  //   return(
+  //     <IconButton style={{color: 'black'}} onClick={onClickDismiss(key)} size="small">
+  //           <Close/>
+  //     </IconButton>
+  //   )
+  // }
+
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <ThemeProvider theme={theme}>
+        <SnackbarProvider ref={notistackRef} maxSnack={3} 
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+          }}
+      >
+          <ConfirmProvider>
+            <SideNav>
+              {props.children}
+            </SideNav>
+          </ConfirmProvider>
+        </SnackbarProvider>
+      </ThemeProvider>
     </div>
   );
 }
-
-export default App;

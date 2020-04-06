@@ -84,5 +84,10 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     }
+  },
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ketkar203040/anitrak-desktop.git"
   }
 }

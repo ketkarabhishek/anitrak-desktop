@@ -1,3 +1,3 @@
 import Sync from "./Sync";
 
-export default Sync
+export default Sync;

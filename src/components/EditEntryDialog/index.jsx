@@ -1,3 +1,3 @@
-import EditEntryDialog from './EditEntryDialog';
+import EditEntryDialog from "./EditEntryDialog";
 
 export default EditEntryDialog;

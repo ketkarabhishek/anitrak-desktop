@@ -1,5 +1,6 @@
 {
   "name": "anitrak-desktop",
+  "description": "A desktop app to track all your anime.",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -26,7 +27,7 @@
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.4.1"
   },
-  "homepage": ".",
+  "homepage": "./",
   "main": "public/electron.js",
   "scripts": {
     "start": "react-scripts start",
@@ -35,7 +36,8 @@
     "eject": "react-scripts eject",
     "postinstall": "electron-builder install-app-deps",
     "electron-dev": "concurrently \"cross-env BROWSER=none yarn start\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron-build": "yarn build && yarn electron-builder"
+    "electron-build": "yarn build && yarn electron-builder --dir",
+    "electron-package": "yarn build && yarn electron-builder"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -56,6 +58,9 @@
     "concurrently": "^5.1.0",
     "electron": "^8.2.0",
     "electron-builder": "^22.4.1",
+    "husky": "^4.2.3",
+    "lint-staged": "^10.1.2",
+    "prettier": "^2.0.4",
     "typescript": "^3.8.3",
     "wait-on": "^4.0.1"
   },
@@ -67,8 +72,7 @@
     "productName": "AniTrak",
     "copyright": "Copyright © 2020 ${author}",
     "files": [
-      "build/**/*",
-      "node_modules/**/*"
+      "build/**/*"
     ],
     "directories": {
       "buildResources": "assets",
@@ -85,9 +89,19 @@
       "allowToChangeInstallationDirectory": true
     }
   },
-
   "repository": {
     "type": "git",
     "url": "https://github.com/ketkar203040/anitrak-desktop.git"
+  },
+
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
   }
 }

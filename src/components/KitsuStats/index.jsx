@@ -1,3 +1,3 @@
-import KitsuStats from './KitsuStats'
+import KitsuStats from "./KitsuStats";
 
 export default KitsuStats;

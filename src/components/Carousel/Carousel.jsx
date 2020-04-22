@@ -50,7 +50,7 @@ export default function Carousel() {
 
   const DataDisplay = ({ empty }) =>
     empty > 0 ? (
-      <div style={{ paddingTop: "180px" }}>
+      <div style={{ padding: "90px 0" }}>
         <Typography align="center" variant="h4" gutterBottom>
           You haven't watched anything yet.
         </Typography>
@@ -84,7 +84,7 @@ export default function Carousel() {
 
   return (
     <div onDragStart={preventDragHandler}>
-      <DataDisplay empty={isEmpty}></DataDisplay>
+      <DataDisplay empty={isEmpty} />
 
       <style global="true" jsx="true">{`
         .carousel-cell {

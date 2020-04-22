@@ -19,9 +19,9 @@ function createWindow() {
     // resizable: false,
     // frame: false,
     show: false,
-    webPreferences: {
-      nodeIntegration: true,
-    },
+    // webPreferences: {
+    //   nodeIntegration: true,
+    // },
   });
   mainWindow.loadURL(
     isDev
@@ -36,9 +36,9 @@ function createWindow() {
     //BrowserWindow.addDevToolsExtension('<location to your react chrome extension>');
     mainWindow.webContents.openDevTools();
   }
-  // else{
-  //   mainWindow.removeMenu();
-  // }
+  else{
+    mainWindow.removeMenu();
+  }
   mainWindow.on("closed", () => (mainWindow = null));
 }
 

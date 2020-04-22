@@ -1,4 +1,4 @@
-// import {GetPrimarySite} from '../../db/linvodb/LinvodbHelper';
+import { GetMalFromKitsu } from "./kitsu-helper";
 
 const baseUrl = "https://kitsu.io/api/edge/users";
 
@@ -96,7 +96,12 @@ async function extractEntryFromJson(resJson, keys) {
     entry.synopsis = resJson.included[key]["attributes"]["synopsis"];
     entry.airDate = resJson.included[key]["attributes"]["startDate"];
 
+    // //Get MAL id
+    // entry.malId = await GetMalFromKitsu(resJson.included[key]["id"])
+
     entry.synced = true;
+
+    //Categories
     entry.categories = [];
 
     var categories =

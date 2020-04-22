@@ -18,12 +18,12 @@ export default function KitsuStats() {
   return (
     <div>
       <Grid container>
-        <Grid item lg={6} md={12}>
+        <Grid item lg={6} md={6}>
           <Card style={{ marginTop: 10, marginRight: 10 }}>
             <AnimeCount></AnimeCount>
           </Card>
         </Grid>
-        <Grid item lg={6} md={12}>
+        <Grid item lg={6} md={6}>
           <Card style={{ marginTop: 10, marginRight: 10 }}>
             <CategoryStats></CategoryStats>
           </Card>
@@ -43,7 +43,7 @@ export default function KitsuStats() {
             <Typography variant="h5" align="center">
               Watchtime
             </Typography>
-            <Typography variant="h3" color="secondary" align="center">
+            <Typography variant="h3" color="primary" align="center">
               {total.totalTime}
             </Typography>
           </Card>
@@ -60,7 +60,7 @@ export default function KitsuStats() {
             <Typography variant="h5" align="center">
               Episodes
             </Typography>
-            <Typography variant="h3" color="secondary" align="center">
+            <Typography variant="h3" color="primary" align="center">
               {total.totalEp}
             </Typography>
           </Card>

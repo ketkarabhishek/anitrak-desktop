@@ -10,15 +10,21 @@ import {
   DialogActions,
   Button,
   CircularProgress,
+  Divider,
 } from "@material-ui/core";
 import {
   GetPrimarySite,
   EditWebsite,
   replaceLibrary,
+  GetSites,
 } from "db/linvodb/LinvodbHelper";
 import { Close, Visibility, VisibilityOff } from "@material-ui/icons";
 import { KitsuLogin } from "apis/kitsu/kitsu-auth";
 import { useSnackbar } from "notistack";
+import { ReactComponent as KitsuLogo } from "images/kitsu.svg";
+import mal from "images/mal.png";
+import Img from "react-image";
+import { Formik, Form, Field } from "formik";
 
 export default function SyncSettingsDialog({
   open,
@@ -28,53 +34,50 @@ export default function SyncSettingsDialog({
 }) {
   const { enqueueSnackbar } = useSnackbar();
 
-  const [kitsuSlug, setKitsuSlug] = useState("");
+  const [currentKitsuSlug, setCurrentKitsuSlug] = useState("");
   const [newKitsuSlug, setNewKitsuSlug] = useState("");
 
-  // const[kitsuPwd, setKitsuPwd] = useState("")
-  const [newKitsuPwd, setNewKitsuPwd] = useState("");
+  const [currentKitsuPwd, setCurrentKitsuPwd] = useState("");
 
-  const [passVisible, setPassVisible] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [kitsuPassVisible, setKitsuPassVisible] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setSubmitting] = useState(false);
 
   const handleClose = () => {
     onClose();
   };
 
-  const handleSlugText = (e) => {
+  const handleKitsuSlug = (e) => {
     setNewKitsuSlug(e.target.value);
   };
 
-  const handlePwdText = (e) => {
-    setNewKitsuPwd(e.target.value);
+  const handleKitsuPassword = (e) => {
+    setCurrentKitsuPwd(e.target.value);
   };
 
-  const handleShowPass = () => {
-    setPassVisible(!passVisible);
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
+  const handleKitsuSave = async () => {
+    setSubmitting(true);
     try {
-      const creds = await KitsuLogin(newKitsuSlug, newKitsuPwd);
-      const site = await EditWebsite("kitsu", newKitsuSlug, newKitsuPwd);
+      const creds = await KitsuLogin(newKitsuSlug, currentKitsuPwd);
+      const site = await EditWebsite("kitsu", newKitsuSlug, currentKitsuPwd);
       creds.userId = site.userId;
       setKitsuSyncSwitch(true);
       setKitsuCreds(creds);
-      if (kitsuSlug !== newKitsuSlug) {
+      if (currentKitsuSlug !== newKitsuSlug) {
         const liblen = await replaceLibrary(creds);
-        setSaving(false);
+        setSubmitting(false);
         enqueueSnackbar(
           "Kitsu Library fetched successfully. Total Entries: " + liblen,
           { variant: "info" }
         );
         handleClose();
       } else {
-        setSaving(false);
+        setSubmitting(false);
         handleClose();
       }
     } catch (error) {
-      setSaving(false);
+      setSubmitting(false);
       console.error(error);
       enqueueSnackbar(error, { variant: "error" });
     }
@@ -82,15 +85,18 @@ export default function SyncSettingsDialog({
 
   useEffect(() => {
     const getSite = async () => {
-      const site = await GetPrimarySite();
-      console.log(site);
+      try {
+        const site = await GetPrimarySite();
+        console.log(site);
 
-      if (site != null) {
-        // setSync(site.sync)
-        setKitsuSlug(site.userName);
-        setNewKitsuSlug(site.userName);
-        // setKitsuPwd(site.password)
-        setNewKitsuPwd(site.password);
+        if (site != null) {
+          setCurrentKitsuSlug(site.userName);
+          setNewKitsuSlug(site.userName);
+          setCurrentKitsuPwd(site.password);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error(error);
       }
     };
 
@@ -101,56 +107,64 @@ export default function SyncSettingsDialog({
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle disableTypography>
         <Grid container justify="space-between">
-          <Typography variant="h5">Accounts</Typography>
+          <Typography variant="h5">Accounts and Settings</Typography>
           <IconButton size="small" onClick={handleClose}>
             <Close />
           </IconButton>
         </Grid>
       </DialogTitle>
+      <Divider />
 
-      <DialogContent>
-        <TextField
-          value={newKitsuSlug}
-          onChange={handleSlugText}
-          margin="normal"
-          variant="outlined"
-          label="Username"
-          helperText="Enter the unique SLUG of your account"
-          style={{ marginRight: 10 }}
-        ></TextField>
-        <TextField
-          value={newKitsuPwd}
-          onChange={handlePwdText}
-          margin="normal"
-          variant="outlined"
-          label="Password"
-          type={passVisible ? "text" : "password"}
-          InputProps={{
-            endAdornment: (
-              <IconButton onClick={handleShowPass}>
-                {passVisible ? <Visibility /> : <VisibilityOff />}
-              </IconButton>
-            ),
-          }}
-        ></TextField>
+      {/* Formik From */}
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <DialogContent>
+          <KitsuLogo
+            style={{ width: "25%", height: "auto", display: "block" }}
+          />
+          <TextField
+            id="kitsuSlug"
+            onChange={handleKitsuSlug}
+            value={newKitsuSlug}
+            margin="normal"
+            variant="outlined"
+            label="Username"
+            helperText="Unique SLUG of your account"
+            style={{ marginRight: 10 }}
+          />
 
-        <Typography variant="subtitle1" color="error">
-          Warning!
-        </Typography>
-        <Typography variant="subtitle2">
-          Changing the Username(SLUG) will replace all the entries.
-        </Typography>
-      </DialogContent>
+          <TextField
+            id="kitsuPassword"
+            onChange={handleKitsuPassword}
+            value={currentKitsuPwd}
+            margin="normal"
+            variant="outlined"
+            label="Password"
+            type={kitsuPassVisible ? "text" : "password"}
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={() => setKitsuPassVisible(!kitsuPassVisible)}
+                >
+                  {kitsuPassVisible ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              ),
+            }}
+          />
+        </DialogContent>
+      )}
 
+      <Divider />
       <DialogActions>
         <Button
           variant="contained"
           color="primary"
-          onClick={handleSave}
-          disabled={saving}
+          disabled={isSubmitting}
+          onClick={handleKitsuSave}
         >
           Save
-          {saving && (
+          {isSubmitting && (
             <CircularProgress
               style={{ marginLeft: 10 }}
               size={20}

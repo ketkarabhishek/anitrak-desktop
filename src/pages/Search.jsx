@@ -77,16 +77,6 @@ export default function SearchPage() {
 
   async function handleInput(e) {
     setSearchTerm(e.target.value);
-
-    // if(e.target.value !== ""){
-    //   setLoading(true);
-    //   const res = await KitsuSearch(e.target.value, {});
-    //   setResults(res);
-    //   setLoading(false);
-    // }
-    // else{
-    //   setResults([]);
-    // }
   }
 
   useEffect(
@@ -117,7 +107,7 @@ export default function SearchPage() {
 
   return (
     <div>
-      <AppBar color="inherit" position="relative">
+      <AppBar color="inherit" position="sticky">
         <Toolbar>
           <Grid
             container

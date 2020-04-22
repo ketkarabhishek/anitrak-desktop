@@ -98,6 +98,19 @@ export function GetPrimarySite() {
   });
 }
 
+export function GetSites(query) {
+  return new Promise((resolve, reject) => {
+    Website.find(query, (err, doc) => {
+      if (err) {
+        console.error(err);
+        reject(err);
+      } else {
+        resolve(doc);
+      }
+    });
+  });
+}
+
 //Library Functions
 
 export function replaceLibrary(auth) {

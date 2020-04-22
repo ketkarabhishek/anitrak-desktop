@@ -71,3 +71,50 @@ export function KitsuSearch(key, filters) {
     resolve(res);
   });
 }
+
+export function GetKitsuFromMal(malid, type = "anime") {
+  const url =
+    baseUrl +
+    "/mappings?filter[externalSite]=myanimelist/" +
+    type +
+    "&filter[external_id]=" +
+    malid;
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await fetch(url);
+
+      if (response.ok) {
+        const resJson = await response.json();
+        const itemLink =
+          resJson.data[0]["relationships"]["item"]["links"]["self"];
+        const itemRes = await fetch(itemLink);
+
+        if (itemRes.ok) {
+          const itemJson = await itemRes.json();
+          const kitsuId = itemJson.data.id;
+          resolve(kitsuId);
+        }
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function GetMalFromKitsu(kitsuId, type = "anime") {
+  const url = baseUrl + type + "/" + kitsuId + "/mappings";
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await fetch(url);
+      const resJson = await response.json();
+      resJson.data.forEach((item) => {
+        if (item["attributes"]["externalSite"] === "myanimelist/" + type) {
+          resolve(item["attributes"]["externalId"]);
+        }
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+}

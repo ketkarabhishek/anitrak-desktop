@@ -70,6 +70,7 @@ export default function AnimeReact(props) {
               align="left"
               variant="h4"
               style={{ marginBottom: 5, marginLeft: 20 }}
+              noWrap
             >
               Anime Count
             </Typography>

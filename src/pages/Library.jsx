@@ -43,6 +43,9 @@ export default function Library(props) {
 
   useEffect(() => {
     setLoading(true);
+    setHasMore(true);
+    setCount(24);
+    setLibrary([]);
     async function populatePage() {
       let st = props.match.params.status;
       setStatus(st.replace(/^./, st[0].toUpperCase()));

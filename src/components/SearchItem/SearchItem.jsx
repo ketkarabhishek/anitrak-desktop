@@ -8,6 +8,7 @@ import {
   ListItem,
   ListItemText,
   Divider,
+  Card,
 } from "@material-ui/core";
 import { useSnackbar } from "notistack";
 
@@ -32,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
   container: {
     position: "relative",
     textAlign: "center",
-    maxWidth: "210px",
+    width: "100%",
     color: "white",
     marginRight: 0,
   },
@@ -43,7 +44,7 @@ const useStyles = makeStyles((theme) => ({
     top: "0",
     bottom: "0",
     width: "100%",
-    height: "300px",
+    height: "auto",
     opacity: "0",
     transition: "opacity 0.3s",
     "&:hover": {
@@ -58,7 +59,8 @@ const useStyles = makeStyles((theme) => ({
   },
 
   image: {
-    height: "300px",
+    display: "block",
+    height: "auto",
     width: "100%",
   },
 
@@ -71,19 +73,6 @@ const useStyles = makeStyles((theme) => ({
     bottom: "0%",
   },
 }));
-
-// const MyLoader = () => (
-//     <ContentLoader
-//       height={310}
-//       width={201}
-//       primaryColor="#7d7d7d"
-//       secondaryColor="#cecccc"
-//     >
-//         <rect x="95" y="140" rx="0" ry="0" width="0" height="0" />
-//         <rect x="99" y="115" rx="0" ry="0" width="0" height="0" />
-//         <rect x="0" y="0" rx="0" ry="0" width="201" height="310" />
-//     </ContentLoader>
-//   )
 
 export default function SearchItem(props) {
   const classes = useStyles();
@@ -166,7 +155,7 @@ export default function SearchItem(props) {
       // width={130}
       backgroundColor="#7d7d7d"
       foregroundColor="#cecccc"
-      style={{ width: "100%", height: "300px" }}
+      style={{ width: "100%", height: "300px", display: "block" }}
     >
       {/* <rect x="95" y="140" rx="0" ry="0" width="0" height="0" /> 
             <rect x="99" y="115" rx="0" ry="0" width="0" height="0" />  */}
@@ -174,80 +163,85 @@ export default function SearchItem(props) {
     </ContentLoader>
   );
   return (
-    <div className={classes.container}>
-      {/* <img src={data.posterUrl} alt={data.title} className={classes.image} title={data.title}/> */}
-      <Img
-        src={data.posterUrl}
-        loader={<MyLoader />}
-        className={classes.image}
-      />
+    <div>
+      <Card variant="outlined">
+        <div className={classes.container}>
+          {/* <img src={data.posterUrl} alt={data.title} className={classes.image} title={data.title}/> */}
 
-      <div className={classes.infoContainer}>
-        <div className={classes.info} style={{ WebkitUserSelect: "none" }}>
-          <Typography variant="body1">{data.showType}</Typography>
+          <Img
+            src={data.posterUrl}
+            loader={<MyLoader />}
+            className={classes.image}
+          />
 
-          <Typography variant="caption">Progress</Typography>
-          <Typography variant="h4">
-            {data.progress}/{data.total}
-          </Typography>
+          <div className={classes.infoContainer}>
+            <div className={classes.info} style={{ WebkitUserSelect: "none" }}>
+              <Typography variant="body1">{data.showType}</Typography>
 
-          <Typography variant="caption">Average Rating</Typography>
-          <Typography variant="h4">
-            {data.averageRating} <span>%</span>
-          </Typography>
+              <Typography variant="caption">Progress</Typography>
+              <Typography variant="h4">
+                {data.progress}/{data.total}
+              </Typography>
 
-          <Button
-            className={classes.editButton}
-            style={{ margin: "5px" }}
-            fullWidth
-            variant="outlined"
-            color="inherit"
-            size="small"
-            onClick={handleClick}
-          >
-            {status}
-          </Button>
-          <Button
-            className={classes.editButton}
-            style={{ margin: "5px" }}
-            fullWidth
-            variant="outlined"
-            color="inherit"
-            size="small"
-            onClick={handleOpenInfo}
-          >
-            Info
-          </Button>
-          {/* <Typography variant="subtitle2" className={classes.title}>{data.title}</Typography> */}
+              <Typography variant="caption">Average Rating</Typography>
+              <Typography variant="h4">
+                {data.averageRating} <span>%</span>
+              </Typography>
+
+              <Button
+                className={classes.editButton}
+                style={{ margin: "5px" }}
+                fullWidth
+                variant="outlined"
+                color="inherit"
+                size="small"
+                onClick={handleClick}
+              >
+                {status}
+              </Button>
+              <Button
+                className={classes.editButton}
+                style={{ margin: "5px" }}
+                fullWidth
+                variant="outlined"
+                color="inherit"
+                size="small"
+                onClick={handleOpenInfo}
+              >
+                Info
+              </Button>
+              {/* <Typography variant="subtitle2" className={classes.title}>{data.title}</Typography> */}
+            </div>
+          </div>
+
+          <Dialog open={open} onClose={handleClose} maxWidth="xs">
+            {/* <DialogTitle>Add to List</DialogTitle> */}
+            <Divider />
+            <List style={{ width: "20em" }}>
+              {statusList.map((item, i) => (
+                <ListItem
+                  button
+                  key={item.value}
+                  onClick={() => handleListClick(i)}
+                >
+                  <ListItemText primary={item.label} />
+                </ListItem>
+              ))}
+            </List>
+          </Dialog>
+
+          {openInfo && (
+            <AnimeInfoDialog
+              open={openInfo}
+              data={props.data}
+              handleClose={handleClose}
+            />
+          )}
         </div>
-      </div>
-      <Typography variant="subtitle2" className={classes.title}>
+      </Card>
+      <Typography align="center" variant="subtitle2" className={classes.title}>
         {data.title}
       </Typography>
-
-      <Dialog open={open} onClose={handleClose} maxWidth="xs">
-        {/* <DialogTitle>Add to List</DialogTitle> */}
-        <Divider />
-        <List style={{ width: "20em" }}>
-          {statusList.map((item, i) => (
-            <ListItem
-              button
-              key={item.value}
-              onClick={() => handleListClick(i)}
-            >
-              <ListItemText primary={item.label} />
-            </ListItem>
-          ))}
-        </List>
-      </Dialog>
-
-      {openInfo && (
-        <AnimeInfoDialog
-          open={openInfo}
-          data={props.data}
-          handleClose={handleClose}
-        />
-      )}
     </div>
   );
 }

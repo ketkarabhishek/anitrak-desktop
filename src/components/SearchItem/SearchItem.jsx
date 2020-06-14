@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { makeStyles } from "@material-ui/core/styles";
+import React, { useState, useEffect } from "react"
+import { makeStyles } from "@material-ui/core/styles"
 import {
   Typography,
   Button,
@@ -9,19 +9,16 @@ import {
   ListItemText,
   Divider,
   Card,
-} from "@material-ui/core";
-import { useSnackbar } from "notistack";
+} from "@material-ui/core"
+import { useSnackbar } from "notistack"
 
-import {
-  GetLibraryFindOne,
-  AddNewEntry,
-  EditLibEntry,
-} from "../../db/linvodb/LinvodbHelper";
-import AnimeInfoDialog from "../AnimeInfoDialog";
-import Img from "react-image";
-import ContentLoader from "react-content-loader";
-
-//import ContentLoader from 'react-content-loader';
+import AnimeInfoDialog from "../AnimeInfoDialog"
+import Img from "react-image"
+import ContentLoader from "react-content-loader"
+import { getDatabase } from "db/rxdb"
+import { isRxDocument } from "rxdb"
+import { addSyncTaskToQueue } from "db/rxdb/utils"
+import { UPSERT } from "apis/constants"
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -72,17 +69,16 @@ const useStyles = makeStyles((theme) => ({
     margin: "15px 0",
     bottom: "0%",
   },
-}));
+}))
 
 export default function SearchItem(props) {
-  const classes = useStyles();
-  const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState("Add");
-  const [exists, setExists] = useState(false);
-  const [data, setData] = useState(props.data);
-  const [openInfo, setOpenInfo] = useState(false);
+  const classes = useStyles()
+  const [open, setOpen] = useState(false)
+  const [status, setStatus] = useState("Add")
+  const [data, setData] = useState(props.data)
+  const [openInfo, setOpenInfo] = useState(false)
 
-  const { enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar()
 
   const statusList = [
     {
@@ -97,57 +93,76 @@ export default function SearchItem(props) {
       value: "planned",
       label: "Planned",
     },
-  ];
+  ]
 
   const handleClick = (event) => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setOpenInfo(false);
-  };
-
-  function handleOpenInfo() {
-    setOpenInfo(true);
+    setOpen(true)
   }
 
-  const handleListClick = (i) => {
-    const newData = data;
-    newData.status = statusList[i].value;
+  const handleClose = () => {
+    setOpen(false)
+    setOpenInfo(false)
+  }
 
-    if (exists) {
-      EditLibEntry(newData).then(() => {
-        enqueueSnackbar("Edited " + newData.title, { variant: "success" });
-      });
-    } else {
-      AddNewEntry(newData).then(() => {
-        enqueueSnackbar("Added " + newData.title, { variant: "success" });
-      });
+  function handleOpenInfo() {
+    setOpenInfo(true)
+  }
+
+  const handleListClick = async (i) => {
+    try {
+      const db = await getDatabase()
+      if (isRxDocument(data)) {
+        const updated = await data.update({
+          $set: {
+            status: statusList[i].value,
+            progress:
+              statusList[i].value === statusList[1].value
+                ? data.totalEpisodes
+                : data.progress,
+          },
+        })
+
+        await addSyncTaskToQueue(UPSERT, data.id)
+        enqueueSnackbar(`Updated ${data.title}`, { variant: "success" })
+        console.log(updated)
+      } else {
+        const newData = data
+        newData.status = statusList[i].value
+        newData.progress =
+          statusList[i].value === statusList[1].value
+            ? data.totalEpisodes
+            : data.progress
+        const inserted = await db.library.insert(newData)
+        await addSyncTaskToQueue(UPSERT, inserted.id)
+        enqueueSnackbar(`Inserted ${data.title}`, { variant: "success" })
+        console.log(inserted)
+      }
+
+      setOpen(false)
+      setStatus(statusList[i].value)
+    } catch (error) {
+      console.error(error)
     }
-
-    setOpen(false);
-    setStatus(statusList[i].value);
-  };
+  }
 
   useEffect(() => {
-    let cancel = false;
+    let cancel = false
     const helper = async () => {
-      setStatus("Add");
-      const entry = await GetLibraryFindOne({ kitsuId: props.data.kitsuId });
+      setStatus("Add")
+      const db = await getDatabase()
+      const entry = await db.library
+        .findOne({ selector: { kitsuId: props.data.kitsuId } })
+        .exec()
       if (entry != null && cancel === false) {
-        entry.rating = data.rating;
-        setStatus(entry.status);
-        setExists(true);
-        setData(entry);
-        //console.log(entry.status + entry.title)
+        setStatus(entry.status)
+        setData(entry)
       }
-    };
-    helper();
+    }
+    helper()
     return () => {
-      cancel = true;
-    };
-  }, []);
+      cancel = true
+    }
+  }, [])
 
   const MyLoader = () => (
     <ContentLoader
@@ -161,7 +176,7 @@ export default function SearchItem(props) {
             <rect x="99" y="115" rx="0" ry="0" width="0" height="0" />  */}
       <rect x="0" y="0" rx="0" ry="0" width="400" height="400" />
     </ContentLoader>
-  );
+  )
   return (
     <div>
       <Card variant="outlined">
@@ -180,7 +195,7 @@ export default function SearchItem(props) {
 
               <Typography variant="caption">Progress</Typography>
               <Typography variant="h4">
-                {data.progress}/{data.total}
+                {data.progress}/{data.totalEpisodes}
               </Typography>
 
               <Typography variant="caption">Average Rating</Typography>
@@ -243,5 +258,5 @@ export default function SearchItem(props) {
         {data.title}
       </Typography>
     </div>
-  );
+  )
 }

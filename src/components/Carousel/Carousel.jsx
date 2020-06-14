@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { Typography, Grid, CircularProgress } from "@material-ui/core";
-import { GetLibrary } from "../../db/linvodb/LinvodbHelper";
-import CarouselItem from "./CarouselItem";
-import { default as MyCarousel } from "react-multi-carousel";
-import "react-multi-carousel/lib/styles.css";
+import React, { useState, useEffect } from "react"
+import { Typography, Grid, CircularProgress } from "@material-ui/core"
+import CarouselItem from "./CarouselItem"
+import { default as MyCarousel } from "react-multi-carousel"
+import "react-multi-carousel/lib/styles.css"
+import { getDatabase } from "db/rxdb"
 
 export default function Carousel() {
-  const [isLoading, setLoading] = useState(true);
-  const [carouselItems, setCarouselItems] = useState([]);
-  const [isEmpty, setEmpty] = useState(false);
+  const [isLoading, setLoading] = useState(true)
+  const [carouselItems, setCarouselItems] = useState([])
+  const [isEmpty, setEmpty] = useState(false)
 
   const responsive = {
     desktop: {
@@ -23,30 +23,40 @@ export default function Carousel() {
       breakpoint: { max: 464, min: 0 },
       items: 1,
     },
-  };
+  }
 
   const preventDragHandler = (e) => {
-    e.preventDefault();
-  };
+    e.preventDefault()
+  }
 
   useEffect(() => {
+    let sub = null
     async function getData() {
-      const libEntries = await GetLibrary({ status: "current" });
-      //console.log("Carousel" + libEntries[0].categories)
-      if (libEntries.length > 0) {
-        let mcarouselItems = [];
-        libEntries.map((entry) =>
-          mcarouselItems.push(<CarouselItem data={entry} key={entry.kitsuId} />)
-        );
-        setCarouselItems(mcarouselItems);
-        setLoading(false);
-      } else {
-        setEmpty(true);
-      }
+      console.log("Get Carousel")
+      const db = await getDatabase()
+      sub = db.library
+        .find({
+          selector: { status: "current" },
+          sort: [{ updatedAt: "desc" }],
+        })
+        .$.subscribe((libEntries) => {
+          if (libEntries.length > 0) {
+            setCarouselItems(libEntries)
+            setLoading(false)
+          } else {
+            setEmpty(true)
+          }
+        })
     }
 
-    getData();
-  }, []);
+    getData()
+
+    return () => {
+      if (sub != null) {
+        sub.unsubscribe()
+      }
+    }
+  }, [])
 
   const DataDisplay = ({ empty }) =>
     empty > 0 ? (
@@ -76,11 +86,13 @@ export default function Carousel() {
             itemClass="carousel-cell"
             containerClass="carousel-container"
           >
-            {carouselItems}
+            {carouselItems.map((entry) => (
+              <CarouselItem data={entry} key={entry.kitsuId} />
+            ))}
           </MyCarousel>
         )}
       </div>
-    );
+    )
 
   return (
     <div onDragStart={preventDragHandler}>
@@ -96,5 +108,5 @@ export default function Carousel() {
         }
       `}</style>
     </div>
-  );
+  )
 }

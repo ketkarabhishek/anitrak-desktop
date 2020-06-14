@@ -1,23 +1,24 @@
-import React from "react";
-import { Route, Switch, BrowserRouter } from "react-router-dom";
-import App from "./App";
+import React from "react"
+import { Route, Switch } from "react-router-dom"
+// import { LinearProgress } from '@material-ui/core';
+// import App from "./App";
+import Dashboard from "pages/Dashboard"
+import Library from "pages/Library"
+import Search from "pages/Search"
 
-import Dashboard from "./pages/Dashboard";
-import Library from "./pages/Library";
+// const Dashboard = lazy(() => import('pages/Dashboard'))
+// const Library = lazy(() => import('pages/Library'))
+// const Search = lazy(() => import('pages/Search'))
 
-import Search from "./pages/Search";
-
-const Routes = () => (
-  <BrowserRouter>
-    <App>
-      <Switch>
-        <Route exact path="/" component={Dashboard} />
-        <Route exact path="/search" component={Search} />
-        <Route exact path="/library/:status" component={Library} />
-        <Route path="*" component={Dashboard} />
-      </Switch>
-    </App>
-  </BrowserRouter>
-);
-
-export default Routes;
+export default function Routes() {
+  return (
+    <Switch>
+      {/* <Suspense fallback={<LinearProgress/>}> */}
+      <Route exact path="/" component={Dashboard} />
+      <Route path="/search" component={Search} />
+      <Route path="/library/:status" component={Library} />
+      <Route path="*" component={Dashboard} />
+      {/* </Suspense> */}
+    </Switch>
+  )
+}

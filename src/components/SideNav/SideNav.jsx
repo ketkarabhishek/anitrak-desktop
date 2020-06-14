@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"
 import {
   List,
   ListItem,
@@ -10,7 +10,7 @@ import {
   Drawer,
   Divider,
   Chip,
-} from "@material-ui/core";
+} from "@material-ui/core"
 import {
   Dashboard,
   Search,
@@ -20,15 +20,15 @@ import {
   PlaylistAddCheck,
   KeyboardArrowDown,
   KeyboardArrowUp,
-} from "@material-ui/icons";
-import { makeStyles } from "@material-ui/core/styles";
+} from "@material-ui/icons"
+import { makeStyles } from "@material-ui/core/styles"
 
-import { GetLibraryCount } from "../../db/linvodb/LinvodbHelper";
-import anitraklogo from "../../images/anitraklogo.png";
-import { Link as Router } from "react-router-dom";
-import Sync from "components/Sync";
+import anitraklogo from "../../images/anitraklogo.png"
+import { Link as Router } from "react-router-dom"
+import Sync from "components/Sync"
+import { getDatabase } from "db/rxdb"
 
-const drawerWidth = 250;
+const drawerWidth = 250
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -56,36 +56,62 @@ const useStyles = makeStyles((theme) => ({
   logo: {
     margin: theme.spacing(2, 1, 2, 1),
   },
-}));
+}))
 
 export default function SideNav(props) {
-  const [open, setOpen] = useState(true);
-  const [current, setCurrent] = useState(0);
-  const [completed, setCompleted] = useState(0);
-  const [planned, setPlanned] = useState(0);
-  const [selectedIndex, setSelected] = useState(1);
+  const [open, setOpen] = useState(true)
+  const [current, setCurrent] = useState(0)
+  const [completed, setCompleted] = useState(0)
+  const [planned, setPlanned] = useState(0)
+  const [selectedIndex, setSelected] = useState(1)
 
   useEffect(() => {
+    let cur,
+      comp,
+      plan = null
     async function getCount() {
-      const cur = await GetLibraryCount({ status: "current" });
-      const comp = await GetLibraryCount({ status: "completed" });
-      const plan = await GetLibraryCount({ status: "planned" });
-      setCurrent(cur);
-      setCompleted(comp);
-      setPlanned(plan);
+      const db = await getDatabase()
+
+      cur = db.library
+        .find({ selector: { status: "current" } })
+        .$.subscribe((res) => {
+          setCurrent(res.length)
+        })
+      comp = db.library
+        .find({ selector: { status: "completed" } })
+        .$.subscribe((res) => {
+          setCompleted(res.length)
+        })
+      plan = db.library
+        .find({ selector: { status: "planned" } })
+        .$.subscribe((res) => {
+          setPlanned(res.length)
+        })
     }
-    getCount();
-  });
+    getCount()
+
+    return () => {
+      if (cur != null) {
+        cur.unsubscribe()
+      }
+      if (comp != null) {
+        comp.unsubscribe()
+      }
+      if (plan != null) {
+        plan.unsubscribe()
+      }
+    }
+  })
 
   function handleClick() {
-    setOpen(!open);
+    setOpen(!open)
   }
 
   function handleListClick(i) {
-    setSelected(i);
+    setSelected(i)
   }
 
-  const classes = useStyles();
+  const classes = useStyles()
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -215,5 +241,5 @@ export default function SideNav(props) {
       </Drawer>
       <main className={classes.content}>{props.children}</main>
     </div>
-  );
+  )
 }

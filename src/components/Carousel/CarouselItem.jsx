@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
+import React, { useState } from "react"
+import { makeStyles } from "@material-ui/core/styles"
 import {
   Typography,
   LinearProgress,
@@ -10,14 +10,14 @@ import {
   CardActionArea,
   CardActions,
   IconButton,
-} from "@material-ui/core";
-import { QueuePlayNext } from "@material-ui/icons";
-import { EditLibEntry } from "../../db/linvodb/LinvodbHelper";
-// import ContentLoader from 'react-content-loader';
-import EditEntryDialog from "../EditEntryDialog";
-import ContentLoader from "react-content-loader";
-import Img from "react-image";
-import { useSnackbar } from "notistack";
+} from "@material-ui/core"
+import { QueuePlayNext } from "@material-ui/icons"
+import EditEntryDialog from "../EditEntryDialog"
+import ContentLoader from "react-content-loader"
+import Img from "react-image"
+import { useSnackbar } from "notistack"
+import { UPSERT } from "apis/constants"
+import { addSyncTaskToQueue } from "db/rxdb/utils"
 
 const useStyles = makeStyles({
   image: {
@@ -25,22 +25,27 @@ const useStyles = makeStyles({
     width: "100%",
     margin: 0,
   },
-});
+})
 
 export default function CarouselItem(props) {
-  const [progress, setProgress] = useState(props.data.progress);
-  const [open, setOpen] = useState(false);
+  const [progress, setProgress] = useState(props.data.progress)
+  const [open, setOpen] = useState(false)
 
-  const classes = useStyles();
-  const { enqueueSnackbar } = useSnackbar();
+  const classes = useStyles()
+  const { enqueueSnackbar } = useSnackbar()
 
   async function handleNextClick() {
-    var mEntry = props.data;
-    mEntry.progress = progress + 1;
-    await EditLibEntry(mEntry);
-    setProgress(parseInt(progress) + 1);
-    enqueueSnackbar("Updated " + mEntry.title, { variant: "success" });
-    console.log("TYPE: " + typeof progress);
+    await props.data.update({
+      $inc: {
+        progress: 1, // increases by 1
+      },
+      $set: {
+        updatedAt: new Date().toISOString(),
+      },
+    })
+    setProgress(props.data.progress)
+    await addSyncTaskToQueue(UPSERT, props.data.id)
+    enqueueSnackbar("Updated " + props.data.title, { variant: "success" })
   }
 
   const MyLoader = () => (
@@ -51,18 +56,16 @@ export default function CarouselItem(props) {
       foregroundColor="#cecccc"
       style={{ width: "100%", height: "250px" }}
     >
-      {/* <rect x="95" y="140" rx="0" ry="0" width="0" height="0" /> 
-            <rect x="99" y="115" rx="0" ry="0" width="0" height="0" />  */}
       <rect x="0" y="0" rx="0" ry="0" width="400" height="400" />
     </ContentLoader>
-  );
+  )
 
-  function handleEditButton() {
-    setOpen(true);
+  const handleEditButton = () => {
+    setOpen(true)
   }
 
-  function handleClose() {
-    setOpen(false);
+  const handleClose = () => {
+    setOpen(false)
   }
 
   return (
@@ -70,7 +73,6 @@ export default function CarouselItem(props) {
       <Card variant="outlined">
         <CardActionArea>
           <CardMedia>
-            {/* <img src={props.data.posterUrl} alt={props.data.title} className={classes.image} title={props.data.title} /> */}
             <Img
               loader={<MyLoader />}
               src={props.data.posterUrl}
@@ -81,11 +83,12 @@ export default function CarouselItem(props) {
           <CardContent>
             <Typography noWrap={true}>{props.data.title}</Typography>
             <Typography>
-              {props.data.progress} / {props.data.total}
+              {props.data.progress} /{" "}
+              {props.data.totalEpisodes < 1 ? "?" : props.data.totalEpisodes}
             </Typography>
             <LinearProgress
               variant="determinate"
-              value={(progress / props.data.total) * 100}
+              value={(progress / props.data.totalEpisodes) * 100}
             ></LinearProgress>
           </CardContent>
         </CardActionArea>
@@ -105,5 +108,5 @@ export default function CarouselItem(props) {
         />
       )}
     </div>
-  );
+  )
 }

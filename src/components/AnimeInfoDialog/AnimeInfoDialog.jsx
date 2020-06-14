@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"
 import {
   Dialog,
   DialogTitle,
@@ -8,43 +8,47 @@ import {
   Divider,
   Chip,
   IconButton,
-} from "@material-ui/core";
-import { GetGenres } from "../../db/linvodb/LinvodbHelper";
-import { Close } from "@material-ui/icons";
+} from "@material-ui/core"
+import { Close } from "@material-ui/icons"
+import { getDatabase } from "db/rxdb"
 
 export default function AnimeInfoDialog(props) {
-  const [categories, setCategories] = useState([]);
-  const [season, setSeason] = useState("");
+  const [categories, setCategories] = useState([])
+  const [season, setSeason] = useState("")
 
   useEffect(() => {
-    let cancel = false;
+    let cancel = false
     async function getData() {
-      const date = new Date(props.data.airDate);
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
+      const date = new Date(props.data.airDate)
+      const year = date.getFullYear()
+      const month = date.getMonth() + 1
       if (month <= 3) {
-        setSeason("Winter " + year);
+        setSeason("Winter " + year)
       } else if (month > 3 && month <= 6) {
-        setSeason("Spring " + year);
+        setSeason("Spring " + year)
       } else if (month > 6 && month <= 9) {
-        setSeason("Summer " + year);
+        setSeason("Summer " + year)
       } else {
-        setSeason("Fall " + year);
+        setSeason("Fall " + year)
       }
-      const genres = await GetGenres(props.data.categories);
+
+      const db = await getDatabase()
+      const categories = await db.categories
+        .find({ selector: { id: { $in: props.data.categories } } })
+        .exec()
 
       if (cancel === false) {
-        setCategories(genres);
+        setCategories(categories)
       }
     }
     if (cancel === false) {
-      getData();
+      getData()
     }
 
     return () => {
-      cancel = true;
-    };
-  }, []);
+      cancel = true
+    }
+  }, [])
   return (
     <div>
       <Dialog
@@ -71,7 +75,9 @@ export default function AnimeInfoDialog(props) {
                   <Typography variant="subtitle2" color="primary">
                     Episodes
                   </Typography>
-                  <Typography variant="h6">{props.data.total}</Typography>
+                  <Typography variant="h6">
+                    {props.data.totalEpisodes}
+                  </Typography>
                 </Grid>
                 <Grid item sm={4}>
                   <Typography variant="subtitle2" color="primary">
@@ -101,7 +107,7 @@ export default function AnimeInfoDialog(props) {
               {categories.map((value) => (
                 <Chip
                   style={{ marginRight: "10px", marginBottom: "10px" }}
-                  key={value.slug}
+                  key={value.id}
                   label={value.title}
                   size="small"
                   color="primary"
@@ -115,5 +121,5 @@ export default function AnimeInfoDialog(props) {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

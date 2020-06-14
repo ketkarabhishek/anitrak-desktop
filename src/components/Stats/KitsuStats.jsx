@@ -1,32 +1,45 @@
-import React, { useState, useEffect } from "react";
-import AnimeCount from "./AnimeCount";
-import CategoryStats from "./CategoryStats";
-import { Grid, Typography, Card } from "@material-ui/core";
-import { GetTotalWatchTime } from "../../db/linvodb/LinvodbHelper";
+import React, { useState, useEffect } from "react"
+import AnimeCount from "./AnimeCount"
+import CategoryStats from "./CategoryStats"
+import { Grid, Typography, Card } from "@material-ui/core"
+import { getDatabase } from "db/rxdb"
 
 export default function KitsuStats() {
-  const [total, setTime] = useState("");
+  const [episodes, setEpisodes] = useState(0)
+  const [time, setTime] = useState("")
 
   useEffect(() => {
     async function getData() {
-      const time = await GetTotalWatchTime();
-      setTime(time);
+      const db = await getDatabase()
+      const entries = await db.library.find().exec()
+      const totalMinutes = entries.reduce((total, current) => {
+        return total + current.progress * current.episodeLength
+      }, 0)
+      const dayjs = require("dayjs")
+      dayjs.extend(require("dayjs/plugin/duration"))
+      const totalTime = dayjs.duration(totalMinutes * 60 * 1000)
+      setTime(`${totalTime.months()} Months ${totalTime.days()} Days`)
+
+      const totalEpisodes = entries.reduce((total, current) => {
+        return total + current.progress
+      }, 0)
+      setEpisodes(totalEpisodes)
     }
-    getData();
-  }, []);
+    getData()
+  }, [])
 
   return (
     <div>
       <Grid container>
         <Grid item lg={6} md={6}>
-          <Card style={{ marginTop: 10, marginRight: 10 }}>
-            <AnimeCount></AnimeCount>
-          </Card>
+          <div style={{ marginTop: 10, marginRight: 10 }}>
+            <AnimeCount />
+          </div>
         </Grid>
         <Grid item lg={6} md={6}>
-          <Card style={{ marginTop: 10, marginRight: 10 }}>
-            <CategoryStats></CategoryStats>
-          </Card>
+          <div style={{ marginTop: 10, marginRight: 10 }}>
+            <CategoryStats />
+          </div>
         </Grid>
       </Grid>
 
@@ -44,7 +57,7 @@ export default function KitsuStats() {
               Watchtime
             </Typography>
             <Typography variant="h3" color="primary" align="center">
-              {total.totalTime}
+              {time}
             </Typography>
           </Card>
         </Grid>
@@ -61,11 +74,11 @@ export default function KitsuStats() {
               Episodes
             </Typography>
             <Typography variant="h3" color="primary" align="center">
-              {total.totalEp}
+              {episodes}
             </Typography>
           </Card>
         </Grid>
       </Grid>
     </div>
-  );
+  )
 }

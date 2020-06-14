@@ -1,42 +1,14 @@
+![logo](src/images/anitraklogo.png)
 # AniTrak
 
 A desktop app to track  **Anime**  and sync with your favorite services.
-> Currently only supports [**Kitsu**](http://kitsu.io).  
+> Currently supports [**Kitsu**](http://kitsu.io) and [**MyAnimeList**](http://myanimelist.net).  
 
-## Available Scripts
+**MyAnimeList services may not work properly as the API is unreliable.**
 
-  
-
-In the project directory, you can run:
-
-  
-
-### `yarn electron-dev`
-
-  
-
-Runs the app in the development mode.<br  />
-
-  
-
-The page will reload if you make edits.<br  />
-
-You will also see any lint errors in the console.
-
-  
+Made with **Electron** and **React**.
 
 
-  
-
-### `yarn electron-build`
-
-
-Builds the unpacked app for production to the `release` folder.<br  />
-
-### `yarn electron-pack`
-
-
-Builds the packed app installer for production to the `release` folder.<br  />
 
 
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link as Router } from "react-router-dom";
+import React, { useState, useEffect } from "react"
+import { Link as Router } from "react-router-dom"
 import {
   Typography,
   Grid,
@@ -8,11 +8,11 @@ import {
   Button,
   makeStyles,
   CircularProgress,
-} from "@material-ui/core";
-import { GetLibrary } from "../db/linvodb/LinvodbHelper";
-import LibraryItem from "../components/LibraryItem";
+} from "@material-ui/core"
+import LibraryItem from "components/LibraryItem"
 
-import InfiniteScroll from "react-infinite-scroller";
+import InfiniteScroll from "react-infinite-scroller"
+import { getDatabase } from "db/rxdb"
 
 const useStyles = makeStyles((theme) => ({
   main: {
@@ -21,49 +21,62 @@ const useStyles = makeStyles((theme) => ({
     height: "100%",
     paddingRight: "15px",
   },
-}));
+}))
 
 export default function Library(props) {
-  const classes = useStyles();
+  const classes = useStyles()
 
-  const [library, setLibrary] = useState([]);
-  const [isLoading, setLoading] = useState(true);
-  const [status, setStatus] = useState("");
-  const [hasMore, setHasMore] = useState(true);
-  const [count, setCount] = useState(24);
-  const [isEmpty, setEmpty] = useState(false);
+  const [library, setLibrary] = useState([])
+  const [isLoading, setLoading] = useState(true)
+  const [status, setStatus] = useState("")
+  const [hasMore, setHasMore] = useState(true)
+  const [count, setCount] = useState(24)
+  const [isEmpty, setEmpty] = useState(false)
 
   const fetchMoreData = () => {
-    setCount(count + 24);
-    console.log("LIBlen: " + library.length);
+    setCount(count + 24)
     if (count >= library.length) {
-      setHasMore(false);
+      setHasMore(false)
     }
-  };
+  }
 
   useEffect(() => {
-    setLoading(true);
-    setHasMore(true);
-    setCount(24);
-    setLibrary([]);
+    setEmpty(false)
+    setLoading(true)
+    setHasMore(true)
+    setCount(24)
+    setLibrary([])
+
+    let sub = null
     async function populatePage() {
-      let st = props.match.params.status;
-      setStatus(st.replace(/^./, st[0].toUpperCase()));
-      const lib = await GetLibrary({ status: st });
-      setLibrary(lib);
+      let st = props.match.params.status
+      setStatus(st.replace(/^./, st[0].toUpperCase()))
+      const db = await getDatabase()
+      sub = db.library
+        .find({ selector: { status: st }, sort: [{ updatedAt: "desc" }] })
+        .$.subscribe((lib) => {
+          console.log(lib)
+          setLibrary(lib)
 
-      if (lib.length === 0) {
-        setEmpty(true);
-      }
+          if (lib.length === 0) {
+            setEmpty(true)
+          }
 
-      if (lib.length <= 24) {
-        setHasMore(false);
-      }
+          if (lib.length <= 24) {
+            setHasMore(false)
+          }
 
-      setLoading(false);
+          setLoading(false)
+        })
     }
-    populatePage();
-  }, [props.match.params.status]);
+    populatePage()
+
+    return () => {
+      if (sub != null) {
+        sub.unsubscribe()
+      }
+    }
+  }, [props.match.params.status])
 
   const DataDisplay = ({ empty }) =>
     empty ? (
@@ -85,7 +98,12 @@ export default function Library(props) {
         loadMore={fetchMoreData}
         hasMore={hasMore}
         loader={
-          <Grid container justify="center" style={{ marginTop: 20 }}>
+          <Grid
+            container
+            justify="center"
+            key="infiniteprogress"
+            style={{ marginTop: 20 }}
+          >
             <CircularProgress disableShrink />
           </Grid>
         }
@@ -98,7 +116,7 @@ export default function Library(props) {
           ))}
         </Grid>
       </InfiniteScroll>
-    );
+    )
 
   return (
     <div className={classes.main}>
@@ -112,9 +130,9 @@ export default function Library(props) {
         </Grid>
       ) : (
         //<Fade in={!isLoading} timeout={1000}>
-        <DataDisplay empty={isEmpty}></DataDisplay>
+        <DataDisplay empty={isEmpty} />
         //</Fade>
       )}
     </div>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from "react"
 import {
   Dialog,
   DialogTitle,
@@ -10,20 +10,21 @@ import {
   Button,
   IconButton,
   Grid,
-} from "@material-ui/core";
-import { useSnackbar } from "notistack";
+} from "@material-ui/core"
+import { useSnackbar } from "notistack"
 
-import { EditLibEntry, DeleteLibEntry } from "../../db/linvodb/LinvodbHelper";
-import { Close, DeleteForever } from "@material-ui/icons";
-import { useConfirm } from "material-ui-confirm";
+import { Close, DeleteForever } from "@material-ui/icons"
+import { useConfirm } from "material-ui-confirm"
+import { addSyncTaskToQueue } from "db/rxdb/utils"
+import { DELETE, UPSERT } from "apis/constants"
 
 export default function EditEntryDialog(props) {
-  const confirm = useConfirm();
-  const { enqueueSnackbar } = useSnackbar();
+  const confirm = useConfirm()
+  const { enqueueSnackbar } = useSnackbar()
 
-  const [status, setStatus] = useState(props.data.status);
-  const [progress, setProgress] = useState(props.data.progress);
-  const [rating, setRating] = useState(props.data.ratingTwenty / 2);
+  const [status, setStatus] = useState(props.data.status)
+  const [progress, setProgress] = useState(props.data.progress)
+  const [rating, setRating] = useState(props.data.ratingTwenty / 2)
 
   const statusList = [
     {
@@ -38,7 +39,7 @@ export default function EditEntryDialog(props) {
       value: "planned",
       label: "Planned",
     },
-  ];
+  ]
 
   const ratings = [
     0,
@@ -61,50 +62,41 @@ export default function EditEntryDialog(props) {
     9,
     9.5,
     10,
-  ];
-
-  // useEffect(() => {
-
-  // }, [props])
+  ]
 
   function handleStatus(e) {
-    setStatus(e.target.value);
+    setStatus(e.target.value)
   }
 
   function handleProgress(e) {
-    if (e.target.value > -1 && e.target.value <= props.data.total) {
-      setProgress(e.target.value);
-      if (e.target.value === props.data.total) {
-        setStatus("completed");
-      } else {
-        setStatus("current");
+    const value = e.target.value
+    if (props.data.totalEpisodes < 1 && value >= 0) {
+      setProgress(value)
+    } else {
+      if (value <= props.data.totalEpisodes && value >= 0) {
+        setProgress(value)
       }
     }
   }
 
   function handleRating(e) {
-    setRating(e.target.value);
-    console.log(e.target.value);
+    setRating(e.target.value)
+    console.log(e.target.value)
   }
 
-  function handleSave() {
-    let newData = props.data;
-    newData.status = status;
-    newData.progress = progress;
-    if (rating === 0) {
-      newData.ratingTwenty = null;
-    } else {
-      newData.ratingTwenty = rating * 2;
-    }
+  async function handleSave() {
+    await props.data.update({
+      $set: {
+        status: status,
+        progress: parseInt(progress),
+        ratingTwenty: rating * 2,
+        updatedAt: new Date().toISOString(),
+      },
+    })
 
-    EditLibEntry(newData)
-      .then(() => {
-        props.handleClose();
-        enqueueSnackbar("Updated " + props.data.title, { variant: "success" });
-      })
-      .catch((err) => {
-        enqueueSnackbar(err, { variant: "error" });
-      });
+    await addSyncTaskToQueue(UPSERT, props.data.id)
+    enqueueSnackbar("Updated " + props.data.title, { variant: "success" })
+    props.handleClose()
   }
 
   function handleDelete() {
@@ -113,19 +105,15 @@ export default function EditEntryDialog(props) {
       description: "Are you sure you want to delete " + props.data.title + "?",
       confirmationButtonProps: { variant: "contained" },
       confirmationText: "Delete",
-    }).then(() => {
-      DeleteLibEntry(props.data.kitsuEntryId)
-        .then(() => {
-          console.log("REMOVED");
-          props.handleClose();
-          enqueueSnackbar("Deleted " + props.data.title, {
-            variant: "success",
-          });
-        })
-        .catch((err) => {
-          enqueueSnackbar(err, { variant: "error" });
-        });
-    });
+    }).then(async () => {
+      const ids = { kitsuId: props.data.kitsuId, malId: props.data.malId }
+      await props.data.remove()
+      await addSyncTaskToQueue(DELETE, ids)
+      enqueueSnackbar("Deleted " + props.data.title, {
+        variant: "success",
+      })
+      props.handleClose()
+    })
   }
 
   return (
@@ -169,10 +157,13 @@ export default function EditEntryDialog(props) {
           fullWidth
           type="number"
           value={progress}
+          min={0}
           InputProps={{
             endAdornment: (
               <Typography style={{ width: "50%" }} align="center">
-                of {props.data.total} Episodes
+                of{" "}
+                {props.data.totalEpisodes < 1 ? "?" : props.data.totalEpisodes}{" "}
+                Episodes
               </Typography>
             ),
           }}
@@ -206,5 +197,5 @@ export default function EditEntryDialog(props) {
         </Grid>
       </DialogActions>
     </Dialog>
-  );
+  )
 }

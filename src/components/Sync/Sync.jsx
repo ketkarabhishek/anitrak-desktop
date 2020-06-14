@@ -1,112 +1,133 @@
-import React, { useState, useEffect } from "react";
-import { ListItem, ListItemText, List, IconButton } from "@material-ui/core";
-import { SyncOutlined, SyncDisabled, Settings } from "@material-ui/icons";
-import {
-  GetPrimarySite,
-  ToggleSiteSync,
-  GetGenreCount,
-  InsertKitsuGenres,
-} from "db/linvodb/LinvodbHelper";
-import { KitsuLogin } from "apis/kitsu/kitsu-auth";
+import React, { useState, useEffect } from "react"
 
-import SyncSettingsDialog from "./SyncSettingsDialog";
-import { useSnackbar } from "notistack";
-import useQueue from "hooks/useQueue";
-import useSync from "hooks/useSync";
+import {
+  ListItem,
+  ListItemText,
+  List,
+  IconButton,
+  ListItemIcon,
+  ListSubheader,
+} from "@material-ui/core"
+import { SyncOutlined, SyncDisabled, MoreVert } from "@material-ui/icons"
+
+import { getDatabase } from "db/rxdb"
+import useNetworkDetector from "hooks/useNetworkDetector"
+
+// MAL
+import mal from "images/mal-icon.png"
+import Img from "react-image"
+import MalSettingsDialog from "./MalSettingsDialog"
+import useMalSync from "hooks/useMalSync"
+
+// Kitsu
+import KitsuSettingsDialog from "./KitsuSettingsDialog"
+import useKitsuSync from "hooks/useKitsuSync"
+import { ReactComponent as KitsuLogo } from "images/kitsu-icon.svg"
+import { GetAllCategories } from "apis/kitsu/utils"
 
 export default function Sync() {
-  const { enqueueSnackbar } = useSnackbar();
-
-  const [kitsuSyncSwitch, setKitsuSyncSwitch] = useState(false);
-  const [kitsuCreds, setKitsuCreds] = useState(null);
-
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [kitsuOpen, setKitsuOpen] = useState(false)
+  const [malOpen, setMalOpen] = useState(false)
 
   const handleKitsuSyncSwitch = async () => {
-    await ToggleSiteSync("kitsu", !kitsuSyncSwitch);
-    setKitsuSyncSwitch(!kitsuSyncSwitch);
-  };
+    const db = await getDatabase()
+    const upsite = await db.website
+      .findOne({ selector: { siteName: "kitsu" } })
+      .update({
+        $set: {
+          sync: !kitsuSync,
+        },
+      })
+    console.log(upsite)
+  }
 
-  const handleSettingsOpen = () => {
-    setSettingsOpen(true);
-  };
+  const handleMalSyncSwitch = async () => {
+    const db = await getDatabase()
+    const upsite = await db.website
+      .findOne({ selector: { siteName: "mal" } })
+      .update({
+        $set: {
+          sync: !malSync,
+        },
+      })
+    console.log(upsite)
+  }
 
-  const handleSettingsClose = () => {
-    setSettingsOpen(false);
-  };
+  const handleKitsuSettingsOpen = () => {
+    setKitsuOpen(true)
+  }
 
-  const queue = useQueue();
+  const handleMalOpen = () => {
+    setMalOpen(true)
+  }
 
+  //Hooks
+  const isConnected = useNetworkDetector()
+  const { kitsuSync } = useKitsuSync(isConnected)
+  const { malSync } = useMalSync(isConnected)
+
+  //Effects
   useEffect(() => {
     // Insert Kitsu genres on first use.
-    GetGenreCount().then((count) => {
-      if (count === 0) {
-        console.log("First time");
-        InsertKitsuGenres();
-      } else {
-        console.log("Not First Time");
-      }
-    });
-
-    // Get sync status from db.
-    GetPrimarySite().then(async (site) => {
-      if (site.sync) {
-        setKitsuSyncSwitch(site.sync);
-      }
-    });
-
-    // EmptyQueue()
-    // console.log(testQueue)
-  }, []);
-
-  // Login effect based on sync settings.
-  useEffect(() => {
-    async function Login() {
+    async function setup() {
       try {
-        const site = await GetPrimarySite();
-        const creds = await KitsuLogin(site.userName, site.password);
-        creds.userId = site.userId;
-        console.log("KITSU_CREDS: " + JSON.stringify(creds));
-        setKitsuCreds(creds);
+        const db = await getDatabase()
+
+        // Get Categories
+        const cats = await db.categories.find().exec()
+        if (cats.length === 0) {
+          const categories = await GetAllCategories()
+          const catInsert = await db.categories.bulkInsert(categories)
+          console.log(catInsert)
+        }
       } catch (error) {
-        console.error(error);
-        enqueueSnackbar(error, { variant: "error" });
+        console.error(error)
       }
     }
-    if (kitsuSyncSwitch) {
-      Login();
-    }
-  }, [kitsuSyncSwitch]);
 
-  useSync(queue, kitsuCreds, kitsuSyncSwitch);
+    setup()
+  }, [isConnected])
 
   return (
     <div>
-      {/* <Divider/> */}
-      <List>
-        <ListItem key="Sync">
-          <ListItemText primary="Sync" />
-          <IconButton size="small" onClick={handleSettingsOpen}>
-            <Settings />
+      <List subheader={<ListSubheader>Sync</ListSubheader>}>
+        <ListItem>
+          <ListItemIcon>
+            <KitsuLogo style={{ width: 24, height: 24 }} />
+          </ListItemIcon>
+          <ListItemText primary="Kitsu" />
+          <IconButton size="small" onClick={handleKitsuSyncSwitch}>
+            {kitsuSync ? <SyncOutlined /> : <SyncDisabled />}
+          </IconButton>
+          <IconButton size="small" onClick={handleKitsuSettingsOpen}>
+            <MoreVert />
           </IconButton>
         </ListItem>
 
-        <ListItem style={{ paddingLeft: "2em" }}>
-          <ListItemText primary="Kitsu" />
-          <IconButton size="small" onClick={handleKitsuSyncSwitch}>
-            {kitsuSyncSwitch ? <SyncOutlined /> : <SyncDisabled />}
+        <ListItem>
+          <ListItemIcon>
+            <Img src={mal} style={{ width: 24, height: 24 }} />
+          </ListItemIcon>
+          <ListItemText primary="MAL" />
+          <IconButton size="small" onClick={handleMalSyncSwitch}>
+            {malSync ? <SyncOutlined /> : <SyncDisabled />}
+          </IconButton>
+          <IconButton size="small" onClick={handleMalOpen}>
+            <MoreVert />
           </IconButton>
         </ListItem>
       </List>
 
-      {settingsOpen && (
-        <SyncSettingsDialog
-          open={settingsOpen}
-          onClose={handleSettingsClose}
-          setKitsuSyncSwitch={setKitsuSyncSwitch}
-          setKitsuCreds={setKitsuCreds}
+      {kitsuOpen && (
+        <KitsuSettingsDialog
+          open={kitsuOpen}
+          onClose={() => setKitsuOpen(false)}
         />
       )}
+
+      {malOpen && (
+        <MalSettingsDialog open={malOpen} onClose={() => setMalOpen(false)} />
+      )}
     </div>
-  );
+  )
 }

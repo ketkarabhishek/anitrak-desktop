@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"
 import {
   AppBar,
   Toolbar,
@@ -6,12 +6,12 @@ import {
   Grid,
   CircularProgress,
   Fade,
-} from "@material-ui/core";
-import { fade, makeStyles } from "@material-ui/core/styles";
-import { Search } from "@material-ui/icons";
-import SearchItem from "../components/SearchItem";
-import { KitsuSearch } from "../apis/kitsu/kitsu-helper";
-import useDebounce from "hooks/useDebounce";
+} from "@material-ui/core"
+import { fade, makeStyles } from "@material-ui/core/styles"
+import { Search } from "@material-ui/icons"
+import SearchItem from "../components/SearchItem"
+import { KitsuSearch } from "../apis/kitsu/search"
+import useDebounce from "hooks/useDebounce"
 
 const useStyles = makeStyles((theme) => ({
   main: {
@@ -64,19 +64,19 @@ const useStyles = makeStyles((theme) => ({
     // //   },
     // },
   },
-}));
+}))
 
 export default function SearchPage() {
-  const [isLoading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [results, setResults] = useState([]);
+  const [isLoading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [results, setResults] = useState([])
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
-  const classes = useStyles();
+  const classes = useStyles()
 
   async function handleInput(e) {
-    setSearchTerm(e.target.value);
+    setSearchTerm(e.target.value)
   }
 
   useEffect(
@@ -84,18 +84,18 @@ export default function SearchPage() {
       // Make sure we have a value (user has entered something in input)
       if (debouncedSearchTerm) {
         // Set isSearching state
-        setLoading(true);
+        setLoading(true)
         // Fire off our API call
         KitsuSearch(debouncedSearchTerm, {})
           .then((result) => {
-            setLoading(false);
-            setResults(result);
+            setLoading(false)
+            setResults(result)
           })
           .catch((err) => {
-            console.error(err);
-          });
+            console.error(err)
+          })
       } else {
-        setResults([]);
+        setResults([])
       }
     },
     // This is the useEffect input array
@@ -103,7 +103,7 @@ export default function SearchPage() {
     // ... and thanks to our hook it will only change if the original ...
     // value (searchTerm) hasn't changed for more than 500ms.
     [debouncedSearchTerm]
-  );
+  )
 
   return (
     <div>
@@ -150,5 +150,5 @@ export default function SearchPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

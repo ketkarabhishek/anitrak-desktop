@@ -1,11 +1,11 @@
-import React, { useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
-import { Typography, LinearProgress, Button, Card } from "@material-ui/core";
-import { Star } from "@material-ui/icons";
-import EditEntryDialog from "../EditEntryDialog";
-import AnimeInfoDialog from "../AnimeInfoDialog";
-import Img from "react-image";
-import ContentLoader from "react-content-loader";
+import React, { useState } from "react"
+import { makeStyles } from "@material-ui/core/styles"
+import { Typography, LinearProgress, Button, Card } from "@material-ui/core"
+import { Star } from "@material-ui/icons"
+import EditEntryDialog from "../EditEntryDialog"
+import AnimeInfoDialog from "../AnimeInfoDialog"
+import Img from "react-image"
+import ContentLoader from "react-content-loader"
 
 const useStyles = makeStyles({
   container: {
@@ -51,7 +51,7 @@ const useStyles = makeStyles({
     margin: "15px 0",
     bottom: "0%",
   },
-});
+})
 
 const MyLoader = () => (
   <ContentLoader
@@ -63,24 +63,24 @@ const MyLoader = () => (
         <rect x="99" y="115" rx="0" ry="0" width="0" height="0" />  */}
     <rect x="0" y="0" rx="0" ry="0" width="400" height="400" />
   </ContentLoader>
-);
+)
 
 export default function LibraryItem(props) {
-  const classes = useStyles();
-  const [open, setOpen] = useState(false);
-  const [openInfo, setOpenInfo] = useState(false);
+  const classes = useStyles()
+  const [open, setOpen] = useState(false)
+  const [openInfo, setOpenInfo] = useState(false)
 
   function handleEditButton() {
-    setOpen(true);
+    setOpen(true)
   }
 
   function handleOpenInfo() {
-    setOpenInfo(true);
+    setOpenInfo(true)
   }
 
   function handleClose() {
-    setOpen(false);
-    setOpenInfo(false);
+    setOpen(false)
+    setOpenInfo(false)
   }
 
   return (
@@ -98,22 +98,21 @@ export default function LibraryItem(props) {
         <div className={classes.infoContainer}>
           <LinearProgress
             variant="determinate"
-            value={(props.data.progress / props.data.total) * 100}
+            value={(props.data.progress / props.data.totalEpisodes) * 100}
           ></LinearProgress>
           <div className={classes.info} style={{ WebkitUserSelect: "none" }}>
             <Typography variant="body1">{props.data.showType}</Typography>
 
             <Typography variant="caption">Progress</Typography>
             <Typography variant="h4">
-              {props.data.progress}/{props.data.total}
+              {props.data.progress}/
+              {props.data.totalEpisodes < 1 ? "?" : props.data.totalEpisodes}
             </Typography>
 
             <Typography variant="caption">Rating</Typography>
             <Typography variant="h4" gutterBottom>
-              {props.data.ratingTwenty / 2}{" "}
-              <span>
-                <Star />
-              </span>
+              {props.data.ratingTwenty / 2}
+              <Star />
             </Typography>
 
             <Button
@@ -154,5 +153,5 @@ export default function LibraryItem(props) {
         />
       </div>
     </Card>
-  );
+  )
 }

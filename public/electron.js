@@ -1,8 +1,8 @@
-const {app, BrowserWindow, nativeTheme} = require("electron");
+const {app, BrowserWindow} = require("electron");
 const path = require("path");
 const isDev = require("electron-is-dev");
 
-require('./electron/ipc')
+require('./main/ipc')
 
 let mainWindow;
 
@@ -13,15 +13,13 @@ function createWindow() {
     minHeight: 800,
     minWidth: 1200,
     darkTheme: true,
-    icon: path.join(__dirname, "electron/icon.png"),
+    icon: path.join(__dirname, "main/icon.png"),
     title: "AniTrak",
     backgroundColor: "#424242",
-    // resizable: false,
-    // frame: false,
     show: false,
     webPreferences: {
-      // nodeIntegration: true,
-      preload: path.join(__dirname, 'electron/preload.js'),
+      nodeIntegration: true,
+      preload: path.join(__dirname, 'main/preload.js'),
     },
   });
   mainWindow.loadURL(
@@ -36,6 +34,7 @@ function createWindow() {
   }
   else{
     // mainWindow.removeMenu();
+  
   }
 
   mainWindow.once("ready-to-show", () => {
@@ -43,9 +42,7 @@ function createWindow() {
   });
   mainWindow.on("closed", () => (mainWindow = null));
 }
-
-nativeTheme.shouldUseDarkColors = true
-nativeTheme.themeSource = "dark" 
+ 
 
 app.on("ready", () => {
   createWindow();

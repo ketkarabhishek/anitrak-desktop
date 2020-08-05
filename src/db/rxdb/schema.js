@@ -14,14 +14,14 @@ export const librarySchema = {
     malId: {
       type: "string",
     },
-    kitsuEntryId: {
-      type: "string",
-      default: "N/A",
-    },
-    malEntry: {
-      type: "boolean",
-      default: false,
-    },
+    // kitsuEntryId: {
+    //   type: "string",
+    //   default: "N/A",
+    // },
+    // malEntry: {
+    //   type: "boolean",
+    //   default: false,
+    // },
     progress: {
       type: "integer",
       default: 0,

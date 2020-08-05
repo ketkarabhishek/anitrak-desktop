@@ -9,6 +9,7 @@ import SideNav from "components/SideNav"
 import { ConfirmProvider } from "material-ui-confirm"
 import Routes from "Routes"
 import { BrowserRouter } from "react-router-dom"
+import "./index.css"
 
 export default function App() {
   const theme = createMuiTheme({

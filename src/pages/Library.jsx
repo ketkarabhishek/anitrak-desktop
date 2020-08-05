@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react"
-import { Link as Router } from "react-router-dom"
 import {
   Typography,
   Grid,
   Divider,
-  Link,
-  Button,
   makeStyles,
   CircularProgress,
 } from "@material-ui/core"
@@ -13,6 +10,7 @@ import LibraryItem from "components/LibraryItem"
 
 import InfiniteScroll from "react-infinite-scroller"
 import { getDatabase } from "db/rxdb"
+import DataDisplay from "components/DataDisplay"
 
 const useStyles = makeStyles((theme) => ({
   main: {
@@ -78,61 +76,38 @@ export default function Library(props) {
     }
   }, [props.match.params.status])
 
-  const DataDisplay = ({ empty }) =>
-    empty ? (
-      <div style={{ marginTop: "10em" }}>
-        <Typography align="center" variant="h4" gutterBottom>
-          You haven't watched anything yet.
-        </Typography>
-        <Typography align="center">
-          <Link underline="none" component={Router} to="/search">
-            <Button color="secondary" variant="contained">
-              Search Here
-            </Button>
-          </Link>
-        </Typography>
-      </div>
-    ) : (
-      <InfiniteScroll
-        pageStart={count}
-        loadMore={fetchMoreData}
-        hasMore={hasMore}
-        loader={
-          <Grid
-            container
-            justify="center"
-            key="infiniteprogress"
-            style={{ marginTop: 20 }}
-          >
-            <CircularProgress disableShrink />
-          </Grid>
-        }
-      >
-        <Grid container spacing={1}>
-          {library.slice(0, count).map((element) => (
-            <Grid item lg={2} md={3} key={element.kitsuId}>
-              <LibraryItem data={element}></LibraryItem>
-            </Grid>
-          ))}
-        </Grid>
-      </InfiniteScroll>
-    )
-
   return (
     <div className={classes.main}>
       <Typography style={{ marginTop: "10px" }} align="left" variant="h5">
         {status}
       </Typography>
       <Divider style={{ marginBottom: "5px" }}></Divider>
-      {isLoading ? (
-        <Grid container justify="center" style={{ marginTop: "20em" }}>
-          <CircularProgress size="5rem" disableShrink />
-        </Grid>
-      ) : (
-        //<Fade in={!isLoading} timeout={1000}>
-        <DataDisplay empty={isEmpty} />
-        //</Fade>
-      )}
+
+      <DataDisplay loading={isLoading} empty={isEmpty}>
+        <InfiniteScroll
+          pageStart={count}
+          loadMore={fetchMoreData}
+          hasMore={hasMore}
+          loader={
+            <Grid
+              container
+              justify="center"
+              key="infiniteprogress"
+              style={{ marginTop: 20 }}
+            >
+              <CircularProgress disableShrink />
+            </Grid>
+          }
+        >
+          <Grid container spacing={1}>
+            {library.slice(0, count).map((element) => (
+              <Grid item lg={2} md={3} key={element.kitsuId}>
+                <LibraryItem data={element} />
+              </Grid>
+            ))}
+          </Grid>
+        </InfiniteScroll>
+      </DataDisplay>
     </div>
   )
 }

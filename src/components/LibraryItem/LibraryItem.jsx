@@ -90,9 +90,6 @@ export default function LibraryItem(props) {
           src={props.data.posterUrl}
           loader={<MyLoader />}
           className={classes.image}
-          // container={children => (
-          //     <Fade in={true} timeout={2000}>{children}</Fade>
-          // )}
         />
 
         <div className={classes.infoContainer}>

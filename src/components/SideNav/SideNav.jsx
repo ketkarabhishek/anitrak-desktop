@@ -27,6 +27,7 @@ import anitraklogo from "../../images/anitraklogo.png"
 import { Link as Router } from "react-router-dom"
 import Sync from "components/Sync"
 import { getDatabase } from "db/rxdb"
+// import TitleBar from "frameless-titlebar"
 
 const drawerWidth = 250
 
@@ -36,12 +37,21 @@ const useStyles = makeStyles((theme) => ({
     // flexWrap: 'wrap',
   },
 
+  appBar: {
+    zIndex: 99,
+    position: "sticky",
+    width: "100%",
+    top: 0,
+    left: 0,
+  },
+
   drawer: {
     width: drawerWidth,
     //flexShrink: 0,
   },
   drawerPaper: {
     width: drawerWidth,
+    // top: "auto"
   },
   toolbar: {
     marginTop: theme.spacing(2),
@@ -115,12 +125,14 @@ export default function SideNav(props) {
   return (
     <div className={classes.root}>
       <CssBaseline />
+      {/* <div className={classes.appBar}><TitleBar title="AniTrak" iconSrc="/electron/icon.png" ></TitleBar></div> */}
       <Drawer
         className={classes.drawer}
         variant="permanent"
         classes={{
           paper: classes.drawerPaper,
         }}
+        ModalProps={{ disablePortal: true }}
         anchor="left"
       >
         <div className={classes.toolbar}></div>
@@ -227,13 +239,6 @@ export default function SideNav(props) {
               <ListItemText primary="Search" />
             </ListItem>
           </Link>
-
-          {/* <Link color="textPrimary" underline="none" component={Router} to="/settings" onClick={e => handleListClick(6)}>
-                        <ListItem selected={selectedIndex === 6} button key="Settings">
-                            <ListItemIcon><Settings/></ListItemIcon>
-                            <ListItemText primary="Settings" />
-                        </ListItem>
-                    </Link> */}
         </List>
 
         <Divider />

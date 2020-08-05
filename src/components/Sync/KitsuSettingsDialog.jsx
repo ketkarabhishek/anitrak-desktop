@@ -12,12 +12,11 @@ import {
 } from "@material-ui/core"
 
 import { Close, Visibility, VisibilityOff } from "@material-ui/icons"
-import { KitsuLogin } from "apis/kitsu/auth"
 import { useSnackbar } from "notistack"
 import { ReactComponent as KitsuLogo } from "images/kitsu.svg"
-import { getKitsuUserId } from "apis/kitsu/utils"
 import { getDatabase } from "db/rxdb"
 import { importLibraryFromKitu } from "db/rxdb/utils"
+import KitsuApi from "kitsu-api-wrapper"
 
 export default function KitsuSettingsDialog({ open, onClose }) {
   const { enqueueSnackbar } = useSnackbar()
@@ -32,6 +31,8 @@ export default function KitsuSettingsDialog({ open, onClose }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [importing, setImporting] = useState(false)
+
+  const kitsuApi = new KitsuApi()
 
   const handleClose = () => {
     onClose()
@@ -50,9 +51,9 @@ export default function KitsuSettingsDialog({ open, onClose }) {
     console.log(process.env.NODE_ENV)
 
     try {
-      const creds = await KitsuLogin(newKitsuSlug, currentKitsuPwd)
-      const userId = await getKitsuUserId(newKitsuSlug)
-      creds.userId = userId
+      await kitsuApi.auth.login(newKitsuSlug, currentKitsuPwd)
+      const user = await kitsuApi.users.fetchBySlug(newKitsuSlug)
+      const userId = user.id
       const db = await getDatabase()
       const site = await db.website.upsert({
         siteName: "kitsu",
@@ -78,10 +79,11 @@ export default function KitsuSettingsDialog({ open, onClose }) {
         .findOne({ selector: { siteName: "kitsu" } })
         .exec()
       if (site) {
-        const creds = await KitsuLogin(site.userName, site.password)
-        creds.userId = site.userId
+        const creds = await kitsuApi.auth.login(newKitsuSlug, currentKitsuPwd)
+        const user = await kitsuApi.users.fetchBySlug(newKitsuSlug)
+        const userId = user.id
 
-        const imported = await importLibraryFromKitu(creds)
+        const imported = await importLibraryFromKitu(creds, userId)
         console.log(imported)
         setImporting(false)
       } else {

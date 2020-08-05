@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from "react"
-import {
-  AppBar,
-  Toolbar,
-  InputBase,
-  Grid,
-  CircularProgress,
-  Fade,
-} from "@material-ui/core"
+import { AppBar, Toolbar, InputBase, Grid, Fade } from "@material-ui/core"
 import { fade, makeStyles } from "@material-ui/core/styles"
 import { Search } from "@material-ui/icons"
 import SearchItem from "../components/SearchItem"
-import { KitsuSearch } from "../apis/kitsu/search"
 import useDebounce from "hooks/useDebounce"
+import KitsuApi from "kitsu-api-wrapper"
+import { GetMalIdFromKitsuId, KitsuParseAnime } from "apis/kitsu/utils"
+import DataDisplay from "components/DataDisplay"
 
 const useStyles = makeStyles((theme) => ({
   main: {
@@ -79,21 +74,66 @@ export default function SearchPage() {
     setSearchTerm(e.target.value)
   }
 
+  async function extractDataFromResult(result) {
+    const data = {
+      kitsuId: result["id"],
+      posterUrl: result["attributes"]["posterImage"]["small"],
+      title: result["attributes"]["canonicalTitle"],
+      showType: result["attributes"]["subtype"],
+      synopsis: result["attributes"]["synopsis"],
+      airDate: result["attributes"]["startDate"],
+      progress: 0,
+      totalEpisodes:
+        result["attributes"]["episodeCount"] == null
+          ? -1
+          : parseInt(result["attributes"]["episodeCount"]),
+      episodeLength:
+        result["attributes"]["episodeLength"] == null
+          ? 20
+          : parseInt(result["attributes"]["episodeLength"]),
+      averageRating:
+        result["attributes"]["averageRating"] == null
+          ? "N/A"
+          : result["attributes"]["averageRating"],
+      ratingTwenty: 0,
+      status: "Add",
+    }
+    data.categories = result["relationships"]["categories"]["data"].map(
+      (citem) => citem.id
+    )
+    return Promise.resolve(data)
+  }
+
   useEffect(
     () => {
+      const kitsuApi = new KitsuApi()
+      async function getData() {
+        const query = kitsuApi.anime.fetch({
+          filter: { text: debouncedSearchTerm },
+          page: { limit: 12 },
+          include: "categories",
+        })
+        try {
+          const res = await query.exec()
+          const pres = res.data.map(async (item) => {
+            const data = await KitsuParseAnime(item)
+            data.progress = 0
+            // data.malId = await GetMalIdFromKitsuId(data.kitsuId)
+            return data
+          })
+          const results = await Promise.all(pres)
+          setLoading(false)
+          setResults(results)
+        } catch (error) {
+          console.error(error)
+          setResults([])
+        }
+      }
       // Make sure we have a value (user has entered something in input)
       if (debouncedSearchTerm) {
         // Set isSearching state
         setLoading(true)
-        // Fire off our API call
-        KitsuSearch(debouncedSearchTerm, {})
-          .then((result) => {
-            setLoading(false)
-            setResults(result)
-          })
-          .catch((err) => {
-            console.error(err)
-          })
+        getData()
       } else {
         setResults([])
       }
@@ -104,6 +144,36 @@ export default function SearchPage() {
     // value (searchTerm) hasn't changed for more than 500ms.
     [debouncedSearchTerm]
   )
+
+  useEffect(() => {
+    async function getData() {
+      setLoading(true)
+      const kitsuApi = new KitsuApi()
+      const query = kitsuApi.anime.fetch({
+        page: { limit: 12 },
+        include: "categories",
+        sort: "popularityRank",
+      })
+      try {
+        const res = await query.exec()
+        console.log(query.nextUrl)
+        const pres = res.data.map(async (item) => {
+          const data = await KitsuParseAnime(item)
+          data.progress = 0
+          // data.malId = await GetMalIdFromKitsuId(data.kitsuId)
+          return data
+        })
+        const results = await Promise.all(pres)
+        setLoading(false)
+        setResults(results)
+      } catch (error) {
+        console.error(error)
+        setResults([])
+      }
+    }
+
+    getData()
+  }, [])
 
   return (
     <div>
@@ -133,11 +203,7 @@ export default function SearchPage() {
       </AppBar>
 
       <div className={classes.main}>
-        {isLoading ? (
-          <Grid container justify="center" style={{ marginTop: "20em" }}>
-            <CircularProgress size="4rem"></CircularProgress>
-          </Grid>
-        ) : (
+        <DataDisplay loading={isLoading}>
           <Fade in={!isLoading} timeout={500}>
             <Grid container spacing={1}>
               {results.map((element) => (
@@ -147,7 +213,7 @@ export default function SearchPage() {
               ))}
             </Grid>
           </Fade>
-        )}
+        </DataDisplay>
       </div>
     </div>
   )

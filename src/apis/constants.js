@@ -1,7 +1,3 @@
-// export const CREATE = "CREATE"
-
-// export const UPDATE = "UPDATE"
-
 export const UPSERT = "UPSERT"
 
 export const DELETE = "DELETE"

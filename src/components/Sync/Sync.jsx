@@ -14,20 +14,20 @@ import { getDatabase } from "db/rxdb"
 import useNetworkDetector from "hooks/useNetworkDetector"
 
 // MAL
-import mal from "images/mal-icon.png"
-import Img from "react-image"
-import MalSettingsDialog from "./MalSettingsDialog"
-import useMalSync from "hooks/useMalSync"
+// import mal from "images/mal-icon.png"
+// import Img from "react-image"
+// import MalSettingsDialog from "./MalSettingsDialog"
+// import useMalSync from "hooks/useMalSync"
 
 // Kitsu
 import KitsuSettingsDialog from "./KitsuSettingsDialog"
 import useKitsuSync from "hooks/useKitsuSync"
 import { ReactComponent as KitsuLogo } from "images/kitsu-icon.svg"
-import { GetAllCategories } from "apis/kitsu/utils"
+import KitsuApi from "kitsu-api-wrapper"
 
 export default function Sync() {
   const [kitsuOpen, setKitsuOpen] = useState(false)
-  const [malOpen, setMalOpen] = useState(false)
+  // const [malOpen, setMalOpen] = useState(false)
 
   const handleKitsuSyncSwitch = async () => {
     const db = await getDatabase()
@@ -41,30 +41,30 @@ export default function Sync() {
     console.log(upsite)
   }
 
-  const handleMalSyncSwitch = async () => {
-    const db = await getDatabase()
-    const upsite = await db.website
-      .findOne({ selector: { siteName: "mal" } })
-      .update({
-        $set: {
-          sync: !malSync,
-        },
-      })
-    console.log(upsite)
-  }
+  // const handleMalSyncSwitch = async () => {
+  //   const db = await getDatabase()
+  //   const upsite = await db.website
+  //     .findOne({ selector: { siteName: "mal" } })
+  //     .update({
+  //       $set: {
+  //         sync: !malSync,
+  //       },
+  //     })
+  //   console.log(upsite)
+  // }
 
   const handleKitsuSettingsOpen = () => {
     setKitsuOpen(true)
   }
 
-  const handleMalOpen = () => {
-    setMalOpen(true)
-  }
+  // const handleMalOpen = () => {
+  //   setMalOpen(true)
+  // }
 
   //Hooks
   const isConnected = useNetworkDetector()
   const { kitsuSync } = useKitsuSync(isConnected)
-  const { malSync } = useMalSync(isConnected)
+  // const { malSync } = useMalSync(isConnected)
 
   //Effects
   useEffect(() => {
@@ -76,7 +76,13 @@ export default function Sync() {
         // Get Categories
         const cats = await db.categories.find().exec()
         if (cats.length === 0) {
-          const categories = await GetAllCategories()
+          const kitsuApi = new KitsuApi()
+          const query = kitsuApi.categories.fetch({ page: { limit: 300 } })
+          const res = await query.exec()
+          const categories = res.data.map((cat) => ({
+            id: cat.id,
+            title: cat.attributes.title,
+          }))
           const catInsert = await db.categories.bulkInsert(categories)
           console.log(catInsert)
         }
@@ -104,7 +110,7 @@ export default function Sync() {
           </IconButton>
         </ListItem>
 
-        <ListItem>
+        {/* <ListItem>
           <ListItemIcon>
             <Img src={mal} style={{ width: 24, height: 24 }} />
           </ListItemIcon>
@@ -115,7 +121,7 @@ export default function Sync() {
           <IconButton size="small" onClick={handleMalOpen}>
             <MoreVert />
           </IconButton>
-        </ListItem>
+        </ListItem> */}
       </List>
 
       {kitsuOpen && (
@@ -125,9 +131,9 @@ export default function Sync() {
         />
       )}
 
-      {malOpen && (
+      {/* {malOpen && (
         <MalSettingsDialog open={malOpen} onClose={() => setMalOpen(false)} />
-      )}
+      )} */}
     </div>
   )
 }

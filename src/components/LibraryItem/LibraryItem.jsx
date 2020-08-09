@@ -95,7 +95,9 @@ export default function LibraryItem(props) {
         <div className={classes.infoContainer}>
           <LinearProgress
             variant="determinate"
-            value={(props.data.progress / props.data.totalEpisodes) * 100}
+            value={
+              (props.data.progress / (props.data.totalEpisodes || -1)) * 100
+            }
           ></LinearProgress>
           <div className={classes.info} style={{ WebkitUserSelect: "none" }}>
             <Typography variant="body1">{props.data.showType}</Typography>
@@ -103,14 +105,20 @@ export default function LibraryItem(props) {
             <Typography variant="caption">Progress</Typography>
             <Typography variant="h4">
               {props.data.progress}/
-              {props.data.totalEpisodes < 1 ? "?" : props.data.totalEpisodes}
+              {props.data.totalEpisodes ? props.data.totalEpisodes : "?"}
             </Typography>
 
             <Typography variant="caption">Rating</Typography>
-            <Typography variant="h4" gutterBottom>
-              {props.data.ratingTwenty / 2}
-              <Star />
-            </Typography>
+            {props.data.ratingTwenty ? (
+              <Typography variant="h4" gutterBottom>
+                {props.data.ratingTwenty / 2}
+                <Star />
+              </Typography>
+            ) : (
+              <Typography variant="h5" gutterBottom>
+                N/A
+              </Typography>
+            )}
 
             <Button
               className={classes.editButton}
@@ -138,16 +146,21 @@ export default function LibraryItem(props) {
             </Typography>
           </div>
         </div>
-        <EditEntryDialog
-          open={open}
-          data={props.data}
-          handleClose={handleClose}
-        />
-        <AnimeInfoDialog
-          open={openInfo}
-          data={props.data}
-          handleClose={handleClose}
-        />
+        {open && (
+          <EditEntryDialog
+            open={open}
+            data={props.data}
+            handleClose={handleClose}
+          />
+        )}
+
+        {openInfo && (
+          <AnimeInfoDialog
+            open={openInfo}
+            data={props.data}
+            handleClose={handleClose}
+          />
+        )}
       </div>
     </Card>
   )

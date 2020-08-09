@@ -56,10 +56,7 @@ export function KitsuParseLibraryEntry(libraryEntry) {
   return {
     progress: parseInt(libraryEntry.attributes.progress),
     status: libraryEntry.attributes.status,
-    ratingTwenty:
-      libraryEntry.attributes.ratingTwenty == null
-        ? 0
-        : parseInt(libraryEntry.attributes.ratingTwenty),
+    ratingTwenty: libraryEntry.attributes.ratingTwenty,
     createdAt: libraryEntry.attributes.createdAt,
     updatedAt: libraryEntry.attributes.updatedAt,
   }
@@ -77,18 +74,9 @@ export async function KitsuParseAnime(anime) {
     showType: anime.attributes.subtype,
     synopsis: anime.attributes.synopsis,
     airDate: anime.attributes.startDate,
-    totalEpisodes:
-      anime.attributes.episodeCount == null
-        ? -1
-        : parseInt(anime.attributes.episodeCount),
-    episodeLength:
-      anime.attributes.episodeLength == null
-        ? 20
-        : parseInt(anime.attributes.episodeLength),
-    averageRating:
-      anime.attributes.averageRating == null
-        ? "N/A"
-        : anime.attributes.averageRating,
+    totalEpisodes: anime.attributes.episodeCount,
+    episodeLength: anime.attributes.episodeLength,
+    averageRating: anime.attributes.averageRating,
     categories: anime.relationships.categories.data.map((citem) => citem.id),
   }
 

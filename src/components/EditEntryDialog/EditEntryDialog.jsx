@@ -10,7 +10,9 @@ import {
   Button,
   IconButton,
   Grid,
+  makeStyles,
 } from "@material-ui/core"
+import Rating from "@material-ui/lab/Rating"
 import { useSnackbar } from "notistack"
 
 import { Close, DeleteForever } from "@material-ui/icons"
@@ -18,13 +20,21 @@ import { useConfirm } from "material-ui-confirm"
 import { addSyncTaskToQueue } from "db/rxdb/utils"
 import { DELETE, UPSERT } from "apis/constants"
 
+const useStyles = makeStyles({
+  root: {
+    display: "flex",
+    alignItems: "center",
+  },
+})
+
 export default function EditEntryDialog(props) {
   const confirm = useConfirm()
   const { enqueueSnackbar } = useSnackbar()
+  const classes = useStyles()
 
   const [status, setStatus] = useState(props.data.status)
   const [progress, setProgress] = useState(props.data.progress)
-  const [rating, setRating] = useState(props.data.ratingTwenty / 2)
+  const [rating, setRating] = useState(props.data.ratingTwenty / 2 || null)
 
   const statusList = [
     {
@@ -39,29 +49,6 @@ export default function EditEntryDialog(props) {
       value: "planned",
       label: "Planned",
     },
-  ]
-
-  const ratings = [
-    0,
-    1,
-    1.5,
-    2,
-    2.5,
-    3,
-    3.5,
-    4,
-    4.5,
-    5,
-    5.5,
-    6,
-    6.5,
-    7,
-    7.5,
-    8,
-    8.5,
-    9,
-    9.5,
-    10,
   ]
 
   function handleStatus(e) {
@@ -79,9 +66,21 @@ export default function EditEntryDialog(props) {
     }
   }
 
-  function handleRating(e) {
-    setRating(e.target.value)
-    console.log(e.target.value)
+  function handleRating(e, v) {
+    if (v < 1) {
+      setRating(1)
+    } else {
+      setRating(v)
+    }
+    console.log(v)
+  }
+
+  const handleAddRating = () => {
+    setRating(1)
+  }
+
+  const handleDeleteRating = () => {
+    setRating(null)
   }
 
   async function handleSave() {
@@ -89,7 +88,7 @@ export default function EditEntryDialog(props) {
       $set: {
         status: status,
         progress: parseInt(progress),
-        ratingTwenty: rating * 2,
+        ratingTwenty: rating * 2 || null,
         updatedAt: new Date().toISOString(),
       },
     })
@@ -161,8 +160,7 @@ export default function EditEntryDialog(props) {
           InputProps={{
             endAdornment: (
               <Typography style={{ width: "50%" }} align="center">
-                of{" "}
-                {props.data.totalEpisodes < 1 ? "?" : props.data.totalEpisodes}{" "}
+                of {props.data.totalEpisodes ? props.data.totalEpisodes : "?"}{" "}
                 Episodes
               </Typography>
             ),
@@ -170,21 +168,45 @@ export default function EditEntryDialog(props) {
           onChange={handleProgress}
         ></TextField>
 
-        <TextField
-          variant="outlined"
-          select
-          label="Rating"
-          value={rating}
-          margin="normal"
-          fullWidth
-          onChange={handleRating}
-        >
-          {ratings.map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
-            </MenuItem>
-          ))}
-        </TextField>
+        <Typography component="legend" variant="caption" color="textSecondary">
+          Rating
+        </Typography>
+        {rating == null ? (
+          <Button variant="outlined" onClick={handleAddRating} size="small">
+            Add Rating
+          </Button>
+        ) : (
+          <Grid container className={classes.root}>
+            <Grid item md={9}>
+              <Rating
+                name="Rating"
+                defaultValue={1}
+                max={10}
+                precision={0.5}
+                size="large"
+                onChange={handleRating}
+                value={rating}
+              />
+            </Grid>
+            <Grid item md={3}>
+              <Typography
+                style={{ paddingLeft: 8, paddingRight: 4 }}
+                variant="body1"
+                align="center"
+              >
+                {rating} / 10
+              </Typography>
+            </Grid>
+            <Button
+              variant="text"
+              color="primary"
+              size="small"
+              onClick={handleDeleteRating}
+            >
+              Delete Rating
+            </Button>
+          </Grid>
+        )}
       </DialogContent>
       <DialogActions>
         <Grid container justify="space-between" alignItems="center">

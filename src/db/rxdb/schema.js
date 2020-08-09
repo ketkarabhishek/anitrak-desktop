@@ -12,7 +12,7 @@ export const librarySchema = {
       type: "string",
     },
     malId: {
-      type: "string",
+      type: ["string", "null"],
     },
     // kitsuEntryId: {
     //   type: "string",
@@ -30,16 +30,16 @@ export const librarySchema = {
       type: "string",
     },
     ratingTwenty: {
-      type: "integer",
+      type: ["integer", "null"],
     },
     averageRating: {
-      type: "string",
+      type: ["string", "null"],
     },
     totalEpisodes: {
-      type: "integer",
+      type: ["integer", "null"],
     },
     episodeLength: {
-      type: "integer",
+      type: ["integer", "null"],
     },
     createdAt: {
       type: "string",
@@ -48,7 +48,7 @@ export const librarySchema = {
       type: "string",
     },
     airDate: {
-      type: "string",
+      type: ["string", "null"],
     },
     title: {
       type: "string",
@@ -70,7 +70,7 @@ export const librarySchema = {
       },
     },
   },
-  indexes: ["createdAt", "updatedAt", "ratingTwenty", "averageRating"],
+  indexes: ["createdAt", "updatedAt"],
 }
 
 export const websiteSchema = {

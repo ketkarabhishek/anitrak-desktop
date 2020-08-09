@@ -84,11 +84,11 @@ export default function CarouselItem(props) {
             <Typography noWrap={true}>{props.data.title}</Typography>
             <Typography>
               {props.data.progress} /{" "}
-              {props.data.totalEpisodes < 1 ? "?" : props.data.totalEpisodes}
+              {props.data.totalEpisodes ? props.data.totalEpisodes : "?"}
             </Typography>
             <LinearProgress
               variant="determinate"
-              value={(progress / props.data.totalEpisodes) * 100}
+              value={(progress / (props.data.totalEpisodes || -1)) * 100}
             ></LinearProgress>
           </CardContent>
         </CardActionArea>

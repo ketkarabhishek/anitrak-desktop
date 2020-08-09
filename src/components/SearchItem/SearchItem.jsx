@@ -195,12 +195,12 @@ export default function SearchItem(props) {
 
               <Typography variant="caption">Progress</Typography>
               <Typography variant="h4">
-                {data.progress}/{data.totalEpisodes}
+                {data.progress}/{data.totalEpisodes ? data.totalEpisodes : "?"}
               </Typography>
 
               <Typography variant="caption">Average Rating</Typography>
               <Typography variant="h4">
-                {data.averageRating} <span>%</span>
+                {data.averageRating ? data.averageRating + "%" : "N/A"}
               </Typography>
 
               <Button

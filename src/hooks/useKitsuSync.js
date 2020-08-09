@@ -79,7 +79,7 @@ export default function useKitsuSync(isConnected) {
                 animeId: res.kitsuId,
                 progress: res.progress,
                 status: res.status,
-                ratingTwenty: res.ratingTwenty || null,
+                ratingTwenty: res.ratingTwenty,
               }
 
               // Get Kitsu library entry id.
@@ -110,14 +110,17 @@ export default function useKitsuSync(isConnected) {
             case DELETE:
               console.log(item.data)
               // Get Kitsu library entry id.
-              query = library.fetch({
-                filter: { animeId: item.data },
+              const deletequery = library.fetch({
+                filter: { animeId: item.data, userId: userId },
                 page: { limit: 1 },
               })
-              result = await query.exec()
-              if (result.data.length) {
+              const dresult = await deletequery.exec()
+              if (dresult.data.length) {
                 console.log(kitsuEntryId)
-                await library.delete({ libraryEntryId: result.data[0].id })
+                await library.delete(
+                  { libraryEntryId: dresult.data[0].id },
+                  kitsuCreds
+                )
               }
               await item.update({
                 $set: {

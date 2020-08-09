@@ -76,7 +76,7 @@ export default function AnimeInfoDialog(props) {
                     Episodes
                   </Typography>
                   <Typography variant="h6">
-                    {props.data.totalEpisodes}
+                    {props.data.totalEpisodes ? props.data.totalEpisodes : "?"}
                   </Typography>
                 </Grid>
                 <Grid item sm={4}>
@@ -90,14 +90,18 @@ export default function AnimeInfoDialog(props) {
                     Avg. Rating
                   </Typography>
                   <Typography variant="h6">
-                    {props.data.averageRating}
+                    {props.data.averageRating
+                      ? props.data.averageRating + "%"
+                      : "N/A"}
                   </Typography>
                 </Grid>
                 <Grid item sm={6}>
                   <Typography variant="subtitle2" color="primary">
                     Season
                   </Typography>
-                  <Typography variant="h6">{season}</Typography>
+                  <Typography variant="h6">
+                    {props.data.airDate ? season : "?"}
+                  </Typography>
                 </Grid>
               </Grid>
             </Grid>

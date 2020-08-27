@@ -14,7 +14,7 @@ import {
 import { QueuePlayNext } from "@material-ui/icons"
 import EditEntryDialog from "../EditEntryDialog"
 import ContentLoader from "react-content-loader"
-import Img from "react-image"
+import { Img } from "react-image"
 import { useSnackbar } from "notistack"
 import { UPSERT } from "apis/constants"
 import { addSyncTaskToQueue } from "db/rxdb/utils"

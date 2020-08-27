@@ -13,7 +13,7 @@ import {
 import { useSnackbar } from "notistack"
 
 import AnimeInfoDialog from "../AnimeInfoDialog"
-import Img from "react-image"
+import { Img } from "react-image"
 import ContentLoader from "react-content-loader"
 import { getDatabase } from "db/rxdb"
 import { isRxDocument } from "rxdb"

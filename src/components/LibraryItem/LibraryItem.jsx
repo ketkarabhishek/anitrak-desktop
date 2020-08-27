@@ -4,7 +4,7 @@ import { Typography, LinearProgress, Button, Card } from "@material-ui/core"
 import { Star } from "@material-ui/icons"
 import EditEntryDialog from "../EditEntryDialog"
 import AnimeInfoDialog from "../AnimeInfoDialog"
-import Img from "react-image"
+import { Img } from "react-image"
 import ContentLoader from "react-content-loader"
 
 const useStyles = makeStyles({

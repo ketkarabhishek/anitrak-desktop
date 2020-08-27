@@ -20,6 +20,7 @@ import {
   PlaylistAddCheck,
   KeyboardArrowDown,
   KeyboardArrowUp,
+  Settings,
 } from "@material-ui/icons"
 import { makeStyles } from "@material-ui/core/styles"
 
@@ -27,6 +28,8 @@ import anitraklogo from "../../images/anitraklogo.png"
 import { Link as Router } from "react-router-dom"
 import Sync from "components/Sync"
 import { getDatabase } from "db/rxdb"
+import SettingsDialog from "components/SettingsDialog/SettingsDialog"
+import { truncate } from "fs"
 // import TitleBar from "frameless-titlebar"
 
 const drawerWidth = 250
@@ -74,6 +77,7 @@ export default function SideNav(props) {
   const [completed, setCompleted] = useState(0)
   const [planned, setPlanned] = useState(0)
   const [selectedIndex, setSelected] = useState(1)
+  const [settingsOpen, setSettingsOpen] = useState(true)
 
   useEffect(() => {
     let cur,
@@ -239,11 +243,24 @@ export default function SideNav(props) {
               <ListItemText primary="Search" />
             </ListItem>
           </Link>
+
+          <ListItem button key="Settings" onClick={() => setSettingsOpen(true)}>
+            <ListItemIcon>
+              <Settings />
+            </ListItemIcon>
+            <ListItemText primary="Settings" />
+          </ListItem>
         </List>
 
         <Divider />
         <Sync />
       </Drawer>
+      {settingsOpen && (
+        <SettingsDialog
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
       <main className={classes.content}>{props.children}</main>
     </div>
   )

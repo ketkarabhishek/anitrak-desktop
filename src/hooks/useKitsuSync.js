@@ -9,6 +9,7 @@ export default function useKitsuSync(isConnected) {
   const [userId, setUserId] = useState("null")
   const [kitsuCreds, setKitsuCreds] = useState(null)
   const [kitsuSync, setKitsuSync] = useState(false)
+  const [kitsuSite, setKitsuSite] = useState(null)
   const [queue, setQueue] = useState([])
 
   const { enqueueSnackbar } = useSnackbar()
@@ -25,21 +26,24 @@ export default function useKitsuSync(isConnected) {
         .findOne({ selector: { siteName: "kitsu" } })
         .$.subscribe(async (site) => {
           if (site != null) {
+            setKitsuSite(site)
             setKitsuSync(site.sync)
-            if (site.sync) {
-              try {
-                const creds = await kitsuApi.auth.login(
-                  site.userName,
-                  site.password
-                )
-                console.log("KITSU_CREDS: " + JSON.stringify(creds))
-                setUserId(site.userId)
-                setKitsuCreds(creds)
-              } catch (error) {
-                console.error(error)
-                enqueueSnackbar("Kitsu Sync: " + error, { variant: "error" })
-              }
-            }
+
+            setUserId(site.userId)
+            // if (site.sync) {
+            //   try {
+            //     const creds = await kitsuApi.auth.refreshAccessToken(
+            //       site.password
+            //     )
+            //     console.log("KITSU_CREDS: " + JSON.stringify(creds))
+            //
+            //     setKitsuCreds(creds)
+
+            //   } catch (error) {
+            //     console.error(error)
+            //     enqueueSnackbar("Kitsu Sync: " + error, { variant: "error" })
+            //   }
+            // }
           }
         })
 
@@ -64,6 +68,38 @@ export default function useKitsuSync(isConnected) {
     }
   }, [])
 
+  /**
+   * Auth Effect
+   */
+  useEffect(() => {
+    async function getToken() {
+      if (kitsuSync && kitsuSite) {
+        try {
+          const creds = await kitsuApi.auth.refreshAccessToken(
+            kitsuSite.password
+          )
+
+          console.log("KITSU_TOKEN: " + JSON.stringify(creds))
+          setKitsuCreds(creds)
+
+          await kitsuSite.update({
+            $set: {
+              password: creds.refresh_token,
+            },
+          })
+        } catch (error) {
+          console.error(error)
+          enqueueSnackbar("Kitsu Auth: " + error, { variant: "error" })
+        }
+      }
+    }
+
+    getToken()
+  }, [kitsuSync])
+
+  /**
+   * Sync Logic
+   */
   useEffect(() => {
     if (isConnected && kitsuSync && queue.length && kitsuCreds) {
       const library = kitsuApi.library

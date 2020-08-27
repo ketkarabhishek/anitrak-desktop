@@ -9,8 +9,18 @@ import {
 } from "@material-ui/core"
 import { Link as Router } from "react-router-dom"
 
-function DataDisplay({ loading, empty, error, errorMessage, children }) {
+function DataDisplay({
+  loading,
+  loadingComponent,
+  empty,
+  error,
+  errorMessage,
+  children,
+}) {
   if (loading) {
+    if (loadingComponent) {
+      return loadingComponent
+    }
     return (
       <Grid
         container
@@ -62,11 +72,11 @@ function DataDisplay({ loading, empty, error, errorMessage, children }) {
 }
 
 DataDisplay.propTypes = {
-  loading: PropTypes.bool,
+  loading: PropTypes.bool.isRequired,
   empty: PropTypes.bool,
   error: PropTypes.bool,
   errorMessage: PropTypes.string,
-  children: PropTypes.node,
+  children: PropTypes.node.isRequired,
 }
 
 export default DataDisplay

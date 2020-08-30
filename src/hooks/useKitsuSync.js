@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useContext } from "react"
 
 import { getDatabase } from "db/rxdb"
 import { UPSERT, DELETE } from "apis/constants"
 import { useSnackbar } from "notistack"
 import KitsuApi from "kitsu-api-wrapper"
+import { AuthTokenContext } from "Contexts/AuthTokenContext"
+import { setKitsuToken } from "Contexts/AuthTokenContext"
 
 export default function useKitsuSync(isConnected) {
-  const [userId, setUserId] = useState("null")
   const [kitsuCreds, setKitsuCreds] = useState(null)
   const [kitsuSync, setKitsuSync] = useState(false)
   const [kitsuSite, setKitsuSite] = useState(null)
@@ -14,7 +15,27 @@ export default function useKitsuSync(isConnected) {
 
   const { enqueueSnackbar } = useSnackbar()
 
+  const { state, dispatch } = useContext(AuthTokenContext)
+  const { kitsuAccessToken } = state
+
   const kitsuApi = new KitsuApi()
+
+  const getKitsuEntryId = async (animeId, userId) => {
+    let query = kitsuApi.library.fetch({
+      filter: { animeId: animeId, userId: userId },
+      page: { limit: 1 },
+    })
+
+    try {
+      const result = await query.exec()
+      if (result.data.length) {
+        return Promise.resolve(result.data[0].id)
+      }
+      return Promise.resolve()
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
 
   useEffect(() => {
     let websiteSub,
@@ -28,22 +49,6 @@ export default function useKitsuSync(isConnected) {
           if (site != null) {
             setKitsuSite(site)
             setKitsuSync(site.sync)
-
-            setUserId(site.userId)
-            // if (site.sync) {
-            //   try {
-            //     const creds = await kitsuApi.auth.refreshAccessToken(
-            //       site.password
-            //     )
-            //     console.log("KITSU_CREDS: " + JSON.stringify(creds))
-            //
-            //     setKitsuCreds(creds)
-
-            //   } catch (error) {
-            //     console.error(error)
-            //     enqueueSnackbar("Kitsu Sync: " + error, { variant: "error" })
-            //   }
-            // }
           }
         })
 
@@ -73,41 +78,37 @@ export default function useKitsuSync(isConnected) {
    */
   useEffect(() => {
     async function getToken() {
-      if (kitsuSync && kitsuSite) {
-        try {
-          const creds = await kitsuApi.auth.refreshAccessToken(
-            kitsuSite.password
-          )
+      try {
+        const creds = await kitsuApi.auth.refreshAccessToken(kitsuSite.password)
 
-          console.log("KITSU_TOKEN: " + JSON.stringify(creds))
-          setKitsuCreds(creds)
+        dispatch(setKitsuToken(creds.access_token))
+        console.log("KITSU_TOKEN: " + JSON.stringify(creds))
+        setKitsuCreds(creds)
 
-          await kitsuSite.update({
-            $set: {
-              password: creds.refresh_token,
-            },
-          })
-        } catch (error) {
-          console.error(error)
-          enqueueSnackbar("Kitsu Auth: " + error, { variant: "error" })
-        }
+        await kitsuSite.update({
+          $set: {
+            password: creds.refresh_token,
+          },
+        })
+      } catch (error) {
+        console.error(error)
+        enqueueSnackbar("Kitsu Auth: " + error, { variant: "error" })
       }
     }
 
-    getToken()
+    if (kitsuSync && kitsuSite && !kitsuAccessToken) {
+      getToken()
+    }
   }, [kitsuSync])
 
   /**
    * Sync Logic
    */
   useEffect(() => {
-    if (isConnected && kitsuSync && queue.length && kitsuCreds) {
+    if (isConnected && kitsuSync && queue.length && kitsuAccessToken) {
       const library = kitsuApi.library
       queue.forEach(async (item) => {
         try {
-          let response = null
-          let kitsuEntryId = null
-
           switch (item.task) {
             case UPSERT:
               const res = await item.data_
@@ -118,22 +119,22 @@ export default function useKitsuSync(isConnected) {
                 ratingTwenty: res.ratingTwenty,
               }
 
-              // Get Kitsu library entry id.
-              let query = library.fetch({
-                filter: { animeId: data.animeId, userId: userId },
-                page: { limit: 1 },
-              })
-              let result = await query.exec()
-              if (result.data.length) {
-                kitsuEntryId = result.data[0].id
-              }
+              const kitsuEntryId = await getKitsuEntryId(
+                data.animeId,
+                kitsuSite.userId
+              )
               console.log(kitsuEntryId)
+              let response = null
               if (kitsuEntryId) {
                 data.libraryEntryId = kitsuEntryId
-                response = await library.update(data, kitsuCreds)
+                response = await library.update(data, {
+                  access_token: kitsuAccessToken,
+                })
                 console.log("KITSU_UPDATE_RES: " + JSON.stringify(response))
               } else {
-                response = await library.create(userId, data, kitsuCreds)
+                response = await library.create(kitsuSite.userId, data, {
+                  access_token: kitsuAccessToken,
+                })
                 console.log("KITSU_CREATE_RES: " + JSON.stringify(response))
               }
               await item.update({
@@ -145,24 +146,22 @@ export default function useKitsuSync(isConnected) {
 
             case DELETE:
               console.log(item.data)
-              // Get Kitsu library entry id.
-              const deletequery = library.fetch({
-                filter: { animeId: item.data, userId: userId },
-                page: { limit: 1 },
-              })
-              const dresult = await deletequery.exec()
-              if (dresult.data.length) {
-                console.log(kitsuEntryId)
+              const delEntryId = await getKitsuEntryId(
+                item.data,
+                kitsuSite.userId
+              )
+              if (delEntryId) {
                 await library.delete(
-                  { libraryEntryId: dresult.data[0].id },
-                  kitsuCreds
+                  { libraryEntryId: delEntryId },
+                  { access_token: kitsuAccessToken }
                 )
+
+                await item.update({
+                  $set: {
+                    isSynced: true,
+                  },
+                })
               }
-              await item.update({
-                $set: {
-                  isSynced: true,
-                },
-              })
 
               break
 
